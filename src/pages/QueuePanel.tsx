@@ -5,6 +5,7 @@ import { useUnitConfig, formatPatientDisplay } from "@/hooks/useUnitConfig";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PriorityBadge } from "@/components/queue/PriorityBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -293,7 +294,7 @@ export default function QueuePanel() {
                         {ticket.called_to} • {typeLabel(ticket.ticket_type)}
                       </p>
                     </div>
-                    <Badge variant={priorityColor(ticket.ticket_type) as any}>{typeLabel(ticket.ticket_type)}</Badge>
+                    <><PriorityBadge priorityCode={(ticket as any).priority_code} size="sm" /><Badge variant="outline" className="text-xs">{typeLabel(ticket.ticket_type)}</Badge></>
                     {(ticket as any).recall_count > 0 && (
                       <Badge variant="outline" className="gap-1">
                         <AlertTriangle className="w-3 h-3" />
@@ -351,9 +352,7 @@ export default function QueuePanel() {
                   <div className="flex items-center gap-3">
                     <span className="text-xl font-black text-orange-600">{ticket.ticket_number}</span>
                     <span className="text-sm text-muted-foreground">{ticket.called_to}</span>
-                    <Badge variant={priorityColor(ticket.ticket_type) as any} className="text-xs">
-                      {typeLabel(ticket.ticket_type)}
-                    </Badge>
+                    <><PriorityBadge priorityCode={(ticket as any).priority_code} size="sm" /><Badge variant="outline" className="text-xs">{typeLabel(ticket.ticket_type)}</Badge></>
                     {(ticket as any).recall_count > 0 && (
                       <span className="text-xs text-muted-foreground">{(ticket as any).recall_count}x</span>
                     )}
@@ -381,7 +380,7 @@ export default function QueuePanel() {
                   <div className="flex items-center gap-3">
                     <span className="text-xl font-black text-blue-600">{ticket.ticket_number}</span>
                     <span className="text-sm">{ticket.patients?.full_name || "—"}</span>
-                    <Badge variant={priorityColor(ticket.ticket_type) as any}>{typeLabel(ticket.ticket_type)}</Badge>
+                    <><PriorityBadge priorityCode={(ticket as any).priority_code} size="sm" /><Badge variant="outline" className="text-xs">{typeLabel(ticket.ticket_type)}</Badge></>
                   </div>
                   <Button
                     size="sm"
@@ -463,9 +462,7 @@ export default function QueuePanel() {
                         <div className="flex items-center gap-3">
                           <span className="text-sm text-muted-foreground font-mono w-6">{idx + 1}º</span>
                           <span className="font-bold text-lg">{ticket.ticket_number}</span>
-                          <Badge variant={priorityColor(ticket.ticket_type) as any}>
-                            {typeLabel(ticket.ticket_type)}
-                          </Badge>
+                          <><PriorityBadge priorityCode={(ticket as any).priority_code} size="sm" /><Badge variant="outline" className="text-xs">{typeLabel(ticket.ticket_type)}</Badge></>
                           <span className="text-sm text-muted-foreground">{ticket.patients?.full_name || "—"}</span>
                         </div>
                         <div className="flex items-center gap-2">
