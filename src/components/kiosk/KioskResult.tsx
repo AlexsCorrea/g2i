@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle2, Printer, Home, Clock, QrCode, AlertCircle } from "lucide-react";
 import type { KioskResultData } from "@/pages/Kiosk";
 import type { UnitConfig } from "@/hooks/useUnitConfig";
+import { priorityMeta } from "@/lib/queuePriority";
 
 interface Props {
   data: KioskResultData;
@@ -11,11 +12,13 @@ interface Props {
 
 const typeLabels: Record<string, string> = {
   normal: "Normal",
-  preferencial: "Preferencial",
-  preferencial_60: "Preferencial 60+",
-  preferencial_80: "Preferencial 80+",
-  retorno_pos_operatorio: "Retorno Pós-op",
   consulta: "Consulta",
+  retorno: "Retorno",
+  retorno_pos_operatorio: "Retorno Pós-op",
+  exames: "Exames",
+  financeiro: "Financeiro",
+  triagem: "Triagem",
+  urgencia: "Urgência",
 };
 
 export function KioskResult({ data, onBack, config }: Props) {
