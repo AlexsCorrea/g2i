@@ -84,16 +84,17 @@ export function useGenerateTicket() {
       notification_enabled?: boolean;
       checkin_data?: Record<string, unknown>;
       priority?: number;
+      priority_code?: string;
+      prefix?: string;
       unit_id?: string;
       device_id?: string;
     }) => {
-      const priority = params.priority ?? getPriorityFromType(params.ticket_type);
-      const prefix = getPrefixFromType(params.ticket_type);
-      
-      // Get next number for this queue today
+      const { priorityWeight } = await import("@/lib/queuePriority");
+      const priorityCode = params.priority_code || "normal";
+      const priority = params.priority ?? priorityWeight(priorityCode);
+      const prefix = params.prefix || legacyPrefixFromType(params.ticket_type);
+
       const today = new Date().toISOString().split("T")[0];
-      
-      // Try to increment counter
       const { data: existing } = await supabase
         .from("queue_counters")
         .select("*")
@@ -123,6 +124,7 @@ export function useGenerateTicket() {
         ticket_number,
         ticket_type: params.ticket_type,
         priority,
+        priority_code: priorityCode,
         queue_name: params.queue_name,
         sector: params.sector || "geral",
         source: params.source || "totem",
@@ -143,12 +145,11 @@ export function useGenerateTicket() {
 
       if (error) throw error;
 
-      // Log history
       await supabase.from("queue_history").insert({
         ticket_id: data.id,
         action: "ticket_created",
         new_status: "aguardando",
-        details: { source: params.source, ticket_type: params.ticket_type },
+        details: { source: params.source, ticket_type: params.ticket_type, priority_code: priorityCode },
       });
 
       return data as QueueTicket;
@@ -258,24 +259,18 @@ export function useUpdateTicketStatus() {
   });
 }
 
-function getPriorityFromType(type: string): number {
-  switch (type) {
-    case "preferencial_80": return 4;
-    case "preferencial_60": return 3;
-    case "preferencial": return 2;
-    case "retorno_pos_operatorio": return 1;
-    case "consulta": return 1;
-    default: return 0;
-  }
-}
-
-function getPrefixFromType(type: string): string {
+function legacyPrefixFromType(type: string): string {
   switch (type) {
     case "preferencial_80": return "P8";
     case "preferencial_60": return "P6";
     case "preferencial": return "PR";
     case "retorno_pos_operatorio": return "RO";
-    case "consulta": return "CO";
-    default: return "SN";
+    case "retorno": return "R";
+    case "consulta": return "C";
+    case "exames": return "E";
+    case "financeiro": return "F";
+    case "triagem": return "T";
+    case "urgencia": return "U";
+    default: return "N";
   }
 }

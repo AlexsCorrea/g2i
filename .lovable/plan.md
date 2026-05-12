@@ -1,131 +1,177 @@
+# Plano — Refino do /admin-autoatendimento (Unidades, Identidade e Tipo×Prioridade)
+
 ## Objetivo
+Refatorar 3 frentes do módulo Autoatendimento:
+1. UX de cadastro de Unidades de Totem (drawer profissional, sem `prompt()`).
+2. Identidade visual com remoção de logo/fundo + clareza entre **Instituição** e **Unidade**.
+3. Separar **Tipo de Senha** (categoria de atendimento) de **Prioridade** (Normal, Preferencial, 60+, 80+), com amarração N:N e fluxo correto no totem.
 
-Evoluir o módulo de Autoatendimento para suportar **múltiplas unidades** e **múltiplos totens físicos**, com toda a parametrização concentrada em `/admin-autoatendimento` e seleção do totem físico na primeira abertura da tela operacional `/kiosk`.
+---
 
-## Situação atual
+## 1) Gestão de Unidades de Totem
 
-- Tabela `unit_config` é **singleton** (uma linha global) — todas as configurações servem para um único totem.
-- `unit_ads` referencia `unit_config_id` mas tudo opera como uma única unidade.
-- `queue_tickets` tem `queue_name` e `sector` como texto livre — não há vínculo com unidade nem catálogo de tipos de senha.
-- `/admin-autoatendimento` edita o singleton via abas (Identidade, TV, Locução, Impressão, Anúncios, etc.).
-- `/kiosk` carrega o singleton e exibe sempre as mesmas opções (Senha / Check-in).
+### Interface
+- Substituir `prompt()/confirm()` por **Drawer lateral grande** ("Gerenciar Unidades") aberto a partir de um botão `Gerenciar Unidades` na barra de seleção.
+- Drawer lista todas as unidades em tabela (Nome, Situação, Observações, ações Editar/Excluir).
+- Botão "Nova Unidade" abre formulário inline com campos:
+  - **Nome da Unidade** (ex.: Ambulatório, Pronto-Socorro, Centro Cirúrgico, Internação, Exames)
+  - **Situação** (Ativa / Inativa — toggle)
+  - **Observações** (textarea opcional)
+- Edição inline na mesma tabela; exclusão com confirmação modal (não `confirm()` nativo).
+- Mensagens de erro/sucesso via `toast`.
 
-## Modelo de dados (nova arquitetura)
+### Schema
+- Adicionar coluna `observations TEXT NULL` em `totem_units` (já existe `active`, `name`).
 
+---
+
+## 2) Identidade Visual — Trocar e Remover
+
+- Na aba **Identidade** adicionar botão **Remover** ao lado de **Trocar** para:
+  - Logo (`logo_url`)
+  - Imagem de fundo (`background_image_url`)
+- Ao remover, fazer `update` setando o campo para `NULL` e atualizar pré-visualização.
+- Placeholders visuais quando ausentes:
+  - Logo: ícone `Building2` em quadro pontilhado
+  - Fundo: gradiente padrão (primary→secondary)
+- Garantir que totem (`Kiosk.tsx`) e TV (`QueueTV.tsx`) já tratam `null` (já tratam — verificado).
+
+### Distinção Instituição × Unidade
+- Adicionar nova seção "Identidade da Instituição" (nível global) com campo **Nome da Instituição** (ex.: OftalmoCenter).
+- Campo **Nome da Unidade** permanece por unidade (Ambulatório etc.).
+- Atualizar labels e textos de ajuda em ambas as áreas.
+
+### Schema
+- Criar tabela singleton `institution_settings` (id, name, logo_url, updated_at) OU adicionar `institution_name TEXT` num registro de configuração global.
+- Decisão: criar `institution_settings` com 1 linha (mais limpo, permite logo institucional futura).
+- Exibição no Totem: cabeçalho mostra "Instituição • Unidade" (ex.: "OftalmoCenter — Ambulatório").
+
+---
+
+## 3) Tipo de Senha × Prioridade (regra de negócio)
+
+### Modelo de dados
+- **Tipos de senha** (`totem_ticket_types`) deixam de carregar prioridade no próprio registro. Manter colunas existentes mas remover semântica de "preferencial/60+/80+" como tipos.
+- Criar **catálogo fixo de prioridades** (enum em código, não tabela):
+  - `normal` (peso 0)
+  - `preferencial` (peso 2)
+  - `preferencial_60` (peso 3)
+  - `preferencial_80` (peso 4)
+- Criar tabela de amarração N:N:
+  ```
+  totem_ticket_type_priorities (
+    id uuid pk,
+    ticket_type_id uuid fk → totem_ticket_types,
+    priority_code text,         -- 'normal' | 'preferencial' | 'preferencial_60' | 'preferencial_80'
+    enabled boolean default true,
+    unique(ticket_type_id, priority_code)
+  )
+  ```
+- Em `queue_tickets` adicionar coluna `priority_code TEXT` (mantém `priority` numérico para ordenação retro-compatível). Default `normal`.
+
+### Migração de dados
+- Limpar tipos existentes que são prioridades disfarçadas:
+  - Remover/converter `preferencial`, `preferencial_60`, `preferencial_80` da tabela `totem_ticket_types` se existirem como tipos (apenas seed).
+- Reseedar tipos por unidade conforme exemplos:
+  - Ambulatório: Consulta, Retorno, Exames
+  - Pronto-Socorro: Triagem, Consulta
+  - Financeiro: Financeiro
+  - etc.
+- Para cada tipo, criar amarrações em `totem_ticket_type_priorities`:
+  - Consulta, Pós-operatório, Triagem, Retorno: todas as 4 prioridades
+  - Financeiro: Normal, Preferencial
+  - Exames: Normal, Preferencial, 60+, 80+
+
+### Aba "Tipos de Senha" (admin)
+- Layout reformulado: cada linha de tipo expõe **chips multi-select de prioridades aceitas** (Normal / Preferencial / 60+ / 80+).
+- Header da seção deixa explícito: "Tipo é a **categoria de atendimento**. Prioridade é uma **característica configurável**."
+- Campos do tipo: código, rótulo, sigla (prefixo), ordem, cor, ativo, **prioridades aceitas**.
+
+---
+
+## 4) Fluxo no Totem (KioskTicket)
+
+Novo fluxo em 2 passos:
+1. **Passo 1 — Tipo de senha**: usuário escolhe Consulta, Triagem, Financeiro etc.
+2. **Passo 2 — Prioridade**:
+   - Buscar `totem_ticket_type_priorities` do tipo escolhido.
+   - Se houver **só uma** prioridade habilitada → seleciona automaticamente e gera senha.
+   - Se houver várias → exibir botões grandes (Normal, Preferencial, 60+, 80+) com cores semânticas (verde/azul/laranja/vermelho).
+3. Geração: `useGenerateTicket` recebe `ticket_type` + `priority_code` + `priority` (peso). Prefixo do bilhete combina sigla do tipo (já não derivado da prioridade).
+
+### Hook `useGenerateTicket`
+- Aceitar `priority_code` e mapear para peso numérico via util.
+- Remover `getPriorityFromType` / `getPrefixFromType` (lógica obsoleta) — prefixo vem do `totem_ticket_types.prefix`.
+
+---
+
+## 5) Exibição da prioridade em todas as telas
+
+Mostrar **Tipo + Prioridade** sempre lado a lado:
+- **KioskResult**: badge do tipo + badge de prioridade (cor semântica).
+- **Impressão térmica**: linha extra "Prioridade: ..." abaixo do tipo.
+- **QueueTV**: adicionar segundo badge de prioridade ao lado do nome.
+- **QueuePanel**: badge de prioridade nas listas (separado do tipo).
+- **Portal mobile (`/portal`, `QueueMobile`)**: incluir prioridade no card do ticket.
+
+Helper único `priorityMeta(code)` em `src/lib/queuePriority.ts` retorna `{ label, color, weight, speech }`.
+
+---
+
+## 6) Telas/Arquivos impactados
+
+```text
+Migrations
+  supabase/migrations/<ts>_unit_observations_priorities.sql
+    - alter totem_units add observations
+    - create institution_settings
+    - alter queue_tickets add priority_code
+    - create totem_ticket_type_priorities (+ RLS)
+    - seed priorities das unidades existentes
+
+Hooks
+  src/hooks/useTotem.ts            (institutionSettings, ticketTypePriorities CRUD)
+  src/hooks/useQueueTickets.ts     (aceitar priority_code, remover legacy mappers)
+  src/hooks/useUnitConfig.ts       (priorityToSpeech usar priority_code)
+
+Lib
+  src/lib/queuePriority.ts         (NEW — catálogo + helpers)
+
+Admin
+  src/pages/AdminAutoatendimento.tsx
+    - novo header "Identidade da Instituição"
+    - drawer "Gerenciar Unidades"
+    - aba Identidade: botões Remover logo/fundo + placeholders
+  src/components/autoatendimento/UnitsManagerDrawer.tsx (NEW)
+  src/components/autoatendimento/InstitutionSettingsCard.tsx (NEW)
+  src/components/autoatendimento/TicketTypesTab.tsx
+    - chips multi-select de prioridades por tipo
+    - texto explicativo Tipo ≠ Prioridade
+
+Operacional
+  src/components/kiosk/KioskTicket.tsx        (passo 1 tipo → passo 2 prioridade)
+  src/components/kiosk/KioskResult.tsx        (badge prioridade + linha de impressão)
+  src/components/kiosk/KioskHome.tsx          (mostrar Instituição • Unidade)
+  src/pages/QueueTV.tsx                       (badge prioridade)
+  src/pages/QueuePanel.tsx                    (badge prioridade nas listas)
+  src/pages/QueueMobile.tsx / Portal.tsx      (exibir prioridade)
 ```
-totem_units (Unidade de Totem)
- ├─ id, name, active, observations
- ├─ logo_url, primary_color, secondary_color, background_image_url
- ├─ todos os campos de config hoje em unit_config
- │  (impressão, locução, TV, check-in, timeouts, privacidade...)
- └─ 1:N → totem_devices, totem_ticket_types, unit_ads
 
-totem_devices (Totem Físico)
- ├─ id, unit_id (FK), name, location, device_identifier
- ├─ active, observations
- └─ overrides JSONB (sobrescritas opcionais sobre a unidade)
+---
 
-totem_ticket_types (Tipos de Senha por Unidade)
- ├─ id, unit_id (FK), code, label
- ├─ priority (0=normal, 1=preferencial, 2=urgência...)
- ├─ color, prefix (letra ex.: "C", "P", "U"), display_order, active
- └─ ex.: Ambulatório → Consulta, Retorno, Preferencial, 60+, 80+
-        PS → Triagem, Urgência, Preferencial
-        CC → Admissão Cirúrgica, Pós-op, Acompanhante
+## Detalhes técnicos
 
-unit_ads (já existe) — repontar FK para totem_units
-```
+- **Catálogo de prioridades** fica em `src/lib/queuePriority.ts` (enum + label/cor/peso/locução). Não vira tabela para evitar over-engineering — são valores fixos legais (Estatuto do Idoso 60+/80+).
+- **RLS**: novas tabelas seguem padrão existente (read público para totens; write restrito a roles autenticados). `institution_settings` segue mesmo padrão de `totem_units`.
+- **Migração retro-compatível**: `queue_tickets.priority` (numérico) preservado para ordenação; `priority_code` é fonte de verdade para exibição/regra. Trigger pequeno: ao inserir, se `priority_code` setado e `priority` nulo → derivar peso.
+- **TV/locução**: `priorityToSpeech` passa a usar `priority_code` (não mais `ticket_type`).
+- **Compatibilidade de tickets antigos**: backfill: `update queue_tickets set priority_code = case ticket_type when 'preferencial_80' then 'preferencial_80' ... else 'normal' end where priority_code is null`.
+- **Drawer** usa `@/components/ui/drawer` (vaul, já presente) com `direction="right"` ou Sheet lateral existente.
 
-## Migrações de banco
-
-1. Criar `totem_units` copiando a estrutura completa de `unit_config` + nome, status, observações.
-2. **Migrar a linha existente** de `unit_config` para `totem_units` como "Unidade Padrão" (preserva configs atuais).
-3. Criar `totem_devices` com FK para `totem_units`.
-4. Criar `totem_ticket_types` com FK para `totem_units`. Seed dos tipos atuais (Normal, Preferencial, etc.) na unidade padrão.
-5. Adicionar `device_id` (uuid, FK opcional → totem_devices) em `queue_tickets` para rastreabilidade.
-6. Repontar `unit_ads.unit_config_id` → `unit_id` em `totem_units` (manter dados).
-7. RLS: leitura pública (anon + auth) para `totem_units`, `totem_devices`, `totem_ticket_types` (necessário para totem operar). Escrita restrita a `authenticated`.
-8. Manter `unit_config` no banco temporariamente como view/legado para compatibilidade — código novo lê de `totem_units`.
-
-## Frontend
-
-### `/admin-autoatendimento` (reescrita do shell)
-
-Estrutura nova:
-
-```
-┌─ Sidebar/Selector ─┐  ┌─ Conteúdo (abas) ────────────────┐
-│ Unidades de Totem  │  │ [Geral] [Identidade] [TV]        │
-│  • Ambulatório  ✓  │  │ [Locução] [Impressão] [Check-in] │
-│  • Pronto-Socorro  │  │ [Tipos de Senha] [Totens Físicos]│
-│  • Centro Cirúrg.  │  │ [Anúncios]                       │
-│  + Nova unidade    │  │                                  │
-└────────────────────┘  └──────────────────────────────────┘
-```
-
-- Seletor lateral lista todas as unidades; ao escolher, todas as abas operam na unidade selecionada.
-- Botão "+ Nova unidade" cria registro com defaults.
-- **Aba Tipos de Senha**: CRUD inline (label, prefixo, prioridade, cor, ordem, ativo).
-- **Aba Totens Físicos**: CRUD inline (nome, localização, identificador, ativo). Botão "Copiar link de acesso" gera URL com `?device=<id>` para provisionar dispositivo.
-- Demais abas (impressão, locução, TV, identidade) reaproveitam controles atuais, agora gravando em `totem_units` da unidade selecionada.
-
-### Hooks
-
-- Reescrever `useUnitConfig.ts` → `useTotemUnits`, `useTotemUnit(id)`, `useTotemDevices(unitId)`, `useTicketTypes(unitId)`, `useUpdateTotemUnit`, `useSelectedDevice` (lê localStorage e resolve unidade).
-- Manter shape compatível para componentes que não foram refatorados (alias).
-
-### `/kiosk` (tela operacional)
-
-Fluxo:
-
-1. Hook `useSelectedDevice()` lê `localStorage["zurich.totem.device_id"]`.
-2. Se vazio OU `?device=` na URL → tela **"Qual totem é este?"**:
-   - Lista totens ativos agrupados por unidade.
-   - Ao selecionar, persiste em localStorage e recarrega.
-   - Aceita `?device=<uuid>` para provisionamento via QR/link.
-3. Resolve `unit_id` do device → carrega config da unidade + tipos de senha.
-4. `KioskHome` exibe botões só para os fluxos habilitados na unidade (Senha / Check-in).
-5. `KioskTicket` exibe **apenas** os `totem_ticket_types` da unidade vinculada ao totem (substitui lista hard-coded).
-6. Identidade visual (logo, cores, background) vem da unidade.
-7. Rodapé do kiosk mostra discreto: `Unidade • Totem` + ícone de engrenagem para "Trocar totem" (limpa localStorage).
-8. Se nenhum totem cadastrado/ativo → bloqueia operação com aviso "Selecione o totem para iniciar o autoatendimento."
-9. Ticket emitido grava `device_id` e `unit_id` em `queue_tickets.checkin_data` (ou nova coluna).
-
-### Componentes a criar
-
-- `src/components/autoatendimento/UnitSelector.tsx` — sidebar de unidades.
-- `src/components/autoatendimento/UnitGeneralTab.tsx` — nome/ativo/observações.
-- `src/components/autoatendimento/TicketTypesTab.tsx` — CRUD tipos de senha.
-- `src/components/autoatendimento/DevicesTab.tsx` — CRUD totens físicos.
-- `src/components/kiosk/KioskDeviceSelect.tsx` — tela "Qual totem é este?".
-- `src/hooks/useTotem.ts` — hooks novos (units, devices, ticket types, selected).
-
-### Componentes a editar
-
-- `src/pages/AdminAutoatendimento.tsx` — adicionar seletor de unidade + 2 abas novas; abas existentes passam a receber `unitId`.
-- `src/pages/Kiosk.tsx` — gate de seleção de totem; carrega config por `unit_id`.
-- `src/components/kiosk/KioskHome.tsx` — usa config da unidade selecionada; rodapé com totem/troca.
-- `src/components/kiosk/KioskTicket.tsx` — lista tipos de senha vindos da unidade.
-
-## Regras de segurança / operacionais
-
-- Sem totem selecionado → kiosk bloqueia emissão.
-- Sobrescritas (`overrides` no device) têm prioridade sobre config da unidade quando preenchidas.
-- Trocar totem requer confirmação (limpa cache local).
-- localStorage key: `zurich.totem.device_id` (uma por dispositivo).
-
-## Massa de teste (seed)
-
-- 3 unidades: Ambulatório, Pronto-Socorro, Centro Cirúrgico (cada uma com config completa).
-- 5 totens: Ambulatório-1, Ambulatório-2, PS-Recepção, PS-Triagem, CC-1.
-- Tipos de senha por unidade conforme exemplos do briefing.
-
-## Resumo de arquivos
-
-| Ação | Arquivo |
-|---|---|
-| Migration | nova `totem_units` + `totem_devices` + `totem_ticket_types` + migração de dados + `device_id` em queue_tickets |
-| Seed | unidades, totens e tipos de senha exemplo |
-| Reescrever | `src/pages/AdminAutoatendimento.tsx`, `src/hooks/useUnitConfig.ts` (→ `useTotem.ts`), `src/pages/Kiosk.tsx` |
-| Editar | `src/components/kiosk/KioskHome.tsx`, `KioskTicket.tsx`, `KioskCheckin.tsx` |
-| Criar | `UnitSelector`, `TicketTypesTab`, `DevicesTab`, `UnitGeneralTab`, `KioskDeviceSelect` |
+## Resultado esperado
+- Cadastro de unidades profissional via drawer, sem prompts nativos.
+- Identidade visual permite remover logo/fundo, com placeholders limpos.
+- Distinção clara entre Nome da Instituição e Nome da Unidade.
+- Tipo de Senha e Prioridade tratados como dimensões independentes, com amarração configurável.
+- Totem coleta tipo → prioridade (auto-seleciona quando só há uma).
+- Painéis, TV, portal e impressão sempre exibem **Tipo + Prioridade**.

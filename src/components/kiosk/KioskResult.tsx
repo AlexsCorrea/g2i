@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle2, Printer, Home, Clock, QrCode, AlertCircle } from "lucide-react";
 import type { KioskResultData } from "@/pages/Kiosk";
 import type { UnitConfig } from "@/hooks/useUnitConfig";
+import { priorityMeta } from "@/lib/queuePriority";
 
 interface Props {
   data: KioskResultData;
@@ -11,11 +12,13 @@ interface Props {
 
 const typeLabels: Record<string, string> = {
   normal: "Normal",
-  preferencial: "Preferencial",
-  preferencial_60: "Preferencial 60+",
-  preferencial_80: "Preferencial 80+",
-  retorno_pos_operatorio: "Retorno Pós-op",
   consulta: "Consulta",
+  retorno: "Retorno",
+  retorno_pos_operatorio: "Retorno Pós-op",
+  exames: "Exames",
+  financeiro: "Financeiro",
+  triagem: "Triagem",
+  urgencia: "Urgência",
 };
 
 export function KioskResult({ data, onBack, config }: Props) {
@@ -102,6 +105,9 @@ export function KioskResult({ data, onBack, config }: Props) {
       printWindow.document.write(`<div class="divider"></div>`);
       printWindow.document.write(`<div class="ticket-number">${data.ticketNumber}</div>`);
       printWindow.document.write(`<div class="ticket-type">${typeLabels[data.ticketType] || data.ticketType}</div>`);
+      if (data.priorityCode && data.priorityCode !== "normal") {
+        printWindow.document.write(`<div class="info" style="margin-top:4px;font-weight:bold">Prioridade: ${priorityMeta(data.priorityCode).label}</div>`);
+      }
 
       if (data.patientName && !isCompact) {
         printWindow.document.write(`<div class="info" style="margin-top:${blockSpacing}px">${data.patientName}</div>`);
@@ -160,8 +166,15 @@ export function KioskResult({ data, onBack, config }: Props) {
       <div className="bg-white rounded-3xl p-8 shadow-2xl space-y-4">
         <p className="text-sm text-[hsl(var(--muted-foreground))] uppercase tracking-wider font-medium">Sua senha</p>
         <p className="text-6xl font-black text-[hsl(var(--primary))] tracking-wider">{data.ticketNumber}</p>
-        <div className="inline-block bg-[hsl(var(--primary)/0.1)] rounded-full px-4 py-1">
-          <p className="text-sm font-medium text-[hsl(var(--primary))]">{typeLabels[data.ticketType] || data.ticketType}</p>
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <div className="inline-block bg-[hsl(var(--primary)/0.1)] rounded-full px-4 py-1">
+            <p className="text-sm font-medium text-[hsl(var(--primary))]">{typeLabels[data.ticketType] || data.ticketType}</p>
+          </div>
+          {data.priorityCode && (
+            <div className="inline-block rounded-full px-4 py-1" style={{ backgroundColor: priorityMeta(data.priorityCode).hex + "22", color: priorityMeta(data.priorityCode).hex }}>
+              <p className="text-sm font-bold">Prioridade: {priorityMeta(data.priorityCode).label}</p>
+            </div>
+          )}
         </div>
 
         {data.patientName && (

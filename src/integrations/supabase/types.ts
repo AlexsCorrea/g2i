@@ -4162,6 +4162,30 @@ export type Database = {
           },
         ]
       }
+      institution_settings: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -7162,6 +7186,7 @@ export type Database = {
           notification_token: string | null
           patient_id: string | null
           priority: number
+          priority_code: string
           queue_name: string
           recall_count: number
           sector: string
@@ -7186,6 +7211,7 @@ export type Database = {
           notification_token?: string | null
           patient_id?: string | null
           priority?: number
+          priority_code?: string
           queue_name?: string
           recall_count?: number
           sector?: string
@@ -7210,6 +7236,7 @@ export type Database = {
           notification_token?: string | null
           patient_id?: string | null
           priority?: number
+          priority_code?: string
           queue_name?: string
           recall_count?: number
           sector?: string
@@ -8242,6 +8269,38 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "totem_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      totem_ticket_type_priorities: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          priority_code: string
+          ticket_type_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          priority_code: string
+          ticket_type_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          priority_code?: string
+          ticket_type_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "totem_ticket_type_priorities_ticket_type_id_fkey"
+            columns: ["ticket_type_id"]
+            isOneToOne: false
+            referencedRelation: "totem_ticket_types"
             referencedColumns: ["id"]
           },
         ]

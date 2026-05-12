@@ -12,6 +12,7 @@ export type KioskFlow = "home" | "ticket" | "checkin" | "result";
 export interface KioskResultData {
   ticketNumber: string;
   ticketType: string;
+  priorityCode?: string;
   patientName?: string;
   professional?: string;
   time?: string;
