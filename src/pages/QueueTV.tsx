@@ -284,22 +284,13 @@ export default function QueueTV() {
     return formatPatientDisplay(ticket.patients?.full_name, ticket.patients?.nome_social || null, privacyMode, "").replace(/^\s*—\s*/, "").trim();
   };
 
-  const priorityLabel = (type: string) => {
+  // Type label kept for context (e.g., "Consulta", "Exames")
+  const typeContextLabel = (type: string) => {
     const map: Record<string, string> = {
-      preferencial_80: "80+", preferencial_60: "60+", preferencial: "Preferencial",
-      retorno_pos_operatorio: "Retorno", consulta: "Consulta", normal: "Normal",
+      retorno_pos_operatorio: "Retorno", consulta: "Consulta",
       exames: "Exames", financeiro: "Financeiro", triagem: "Triagem",
     };
     return map[type] || type;
-  };
-
-  const priorityBgColor = (type: string) => {
-    switch (type) {
-      case "preferencial_80": return "rgba(239,68,68,0.4)";
-      case "preferencial_60": return "rgba(249,115,22,0.4)";
-      case "preferencial": return "rgba(234,179,8,0.35)";
-      default: return "rgba(255,255,255,0.15)";
-    }
   };
 
   // ---- RENDER: AD/IDLE MODE ----
