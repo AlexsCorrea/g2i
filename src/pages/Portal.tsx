@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { DateMaskInput } from "@/components/ui/date-mask-input";
 import { supabase } from "@/integrations/supabase/client";
+import { PriorityBadge } from "@/components/queue/PriorityBadge";
 import { useGenerateTicket, useQueueTicketById, useQueueTickets } from "@/hooks/useQueueTickets";
 import { useUnitConfig } from "@/hooks/useUnitConfig";
 
