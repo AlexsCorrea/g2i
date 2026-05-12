@@ -1,17 +1,18 @@
 import React from "react";
 import { Ticket, CalendarCheck, QrCode } from "lucide-react";
-import { useUnitConfig } from "@/hooks/useUnitConfig";
 import type { KioskFlow } from "@/pages/Kiosk";
+import type { TotemUnit } from "@/hooks/useTotem";
 
 interface Props {
   onSelect: (flow: KioskFlow) => void;
+  unit?: TotemUnit | null;
 }
 
-export function KioskHome({ onSelect }: Props) {
+export function KioskHome({ onSelect, unit }: Props) {
   const portalUrl = `${window.location.origin}/portal`;
-  const { data: config } = useUnitConfig();
+  const config = unit;
 
-  const unitName = config?.unit_name || "OftalmoCenter";
+  const unitName = config?.name || "OftalmoCenter";
   const logoUrl = config?.logo_url;
   const primaryColor = config?.primary_color || "#1e5a8a";
 
