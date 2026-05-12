@@ -5,6 +5,7 @@ import {
   getPatientNameForSpeech, ticketToSpeech, priorityToSpeech,
 } from "@/hooks/useUnitConfig";
 import { Volume2, MapPin, Clock } from "lucide-react";
+import { priorityMeta } from "@/lib/queuePriority";
 
 interface QueuedCall {
   id: string;
