@@ -83,8 +83,11 @@ export function useGenerateTicket() {
       source?: string;
       notification_enabled?: boolean;
       checkin_data?: Record<string, unknown>;
+      priority?: number;
+      unit_id?: string;
+      device_id?: string;
     }) => {
-      const priority = getPriorityFromType(params.ticket_type);
+      const priority = params.priority ?? getPriorityFromType(params.ticket_type);
       const prefix = getPrefixFromType(params.ticket_type);
       
       // Get next number for this queue today
@@ -129,6 +132,8 @@ export function useGenerateTicket() {
       };
       if (params.patient_id) insertData.patient_id = params.patient_id;
       if (params.appointment_id) insertData.appointment_id = params.appointment_id;
+      if (params.unit_id) insertData.unit_id = params.unit_id;
+      if (params.device_id) insertData.device_id = params.device_id;
 
       const { data, error } = await supabase
         .from("queue_tickets")
