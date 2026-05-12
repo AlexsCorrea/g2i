@@ -105,6 +105,9 @@ export function KioskResult({ data, onBack, config }: Props) {
       printWindow.document.write(`<div class="divider"></div>`);
       printWindow.document.write(`<div class="ticket-number">${data.ticketNumber}</div>`);
       printWindow.document.write(`<div class="ticket-type">${typeLabels[data.ticketType] || data.ticketType}</div>`);
+      if (data.priorityCode && data.priorityCode !== "normal") {
+        printWindow.document.write(`<div class="info" style="margin-top:4px;font-weight:bold">Prioridade: ${priorityMeta(data.priorityCode).label}</div>`);
+      }
 
       if (data.patientName && !isCompact) {
         printWindow.document.write(`<div class="info" style="margin-top:${blockSpacing}px">${data.patientName}</div>`);
