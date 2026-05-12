@@ -360,8 +360,36 @@ export default function AdminAutoatendimento() {
           </div>
         </div>
 
+        {/* Unit selector */}
+        <Card>
+          <CardContent className="py-4 flex items-center gap-3 flex-wrap">
+            <Building2 className="w-5 h-5 text-muted-foreground" />
+            <Label className="text-sm">Unidade de Totem:</Label>
+            <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
+              <SelectTrigger className="w-72"><SelectValue placeholder="Selecione uma unidade" /></SelectTrigger>
+              <SelectContent>
+                {(units ?? []).map(u => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.name} {!u.active && "(inativa)"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={handleCreateUnit}><Plus className="w-4 h-4 mr-1" /> Nova unidade</Button>
+            {selectedUnitId && (units?.length || 0) > 1 && (
+              <Button size="sm" variant="ghost" className="text-destructive" onClick={handleDeleteUnit}><Trash2 className="w-4 h-4 mr-1" /> Excluir</Button>
+            )}
+            <span className="text-xs text-muted-foreground ml-auto">
+              {units?.length ?? 0} unidade(s) cadastrada(s)
+            </span>
+          </CardContent>
+        </Card>
+
+        {!selectedUnitId ? (
+          <Card><CardContent className="py-12 text-center text-muted-foreground">Selecione ou cadastre uma unidade para configurar.</CardContent></Card>
+        ) : (
         <Tabs defaultValue="branding" className="space-y-6">
-          <TabsList className="grid grid-cols-7 w-full">
+          <TabsList className="grid grid-cols-9 w-full">
             <TabsTrigger value="branding" className="gap-1"><Palette className="w-4 h-4" /> Identidade</TabsTrigger>
             <TabsTrigger value="privacy" className="gap-1"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
             <TabsTrigger value="tv" className="gap-1"><Tv className="w-4 h-4" /> Painel TV</TabsTrigger>
@@ -369,7 +397,17 @@ export default function AdminAutoatendimento() {
             <TabsTrigger value="ads" className="gap-1"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
             <TabsTrigger value="totem" className="gap-1"><Monitor className="w-4 h-4" /> Totem</TabsTrigger>
             <TabsTrigger value="print" className="gap-1"><Printer className="w-4 h-4" /> Impressão</TabsTrigger>
+            <TabsTrigger value="ticket_types" className="gap-1"><Tag className="w-4 h-4" /> Senhas</TabsTrigger>
+            <TabsTrigger value="devices" className="gap-1"><Monitor className="w-4 h-4" /> Totens</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="ticket_types" className="space-y-6">
+            <TicketTypesTab unitId={selectedUnitId} />
+          </TabsContent>
+          <TabsContent value="devices" className="space-y-6">
+            <DevicesTab unitId={selectedUnitId} />
+          </TabsContent>
+
 
           {/* BRANDING TAB */}
           <TabsContent value="branding" className="space-y-6">
