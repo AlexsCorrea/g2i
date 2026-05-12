@@ -396,9 +396,24 @@ export default function QueueTV() {
               )}
 
               <div className="flex items-center justify-center gap-4 flex-wrap">
-                <span className="px-6 py-2.5 rounded-full text-white text-xl font-bold border border-white/20" style={{ background: priorityBgColor(ticket.ticket_type) }}>
-                  {priorityLabel(ticket.ticket_type)}
-                </span>
+                {(() => {
+                  const meta = priorityMeta(ticket.priority_code);
+                  return (
+                    <>
+                      <span
+                        className="px-6 py-2.5 rounded-full text-white text-xl font-bold border border-white/20"
+                        style={{ background: meta.hex }}
+                      >
+                        {meta.label}
+                      </span>
+                      {ticket.ticket_type && (
+                        <span className="px-5 py-2 rounded-full text-white/90 text-lg font-medium border border-white/20 bg-white/10">
+                          {typeContextLabel(ticket.ticket_type)}
+                        </span>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               {ticket.called_to && (
