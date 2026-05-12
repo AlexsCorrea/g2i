@@ -1,7 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useUnitConfig, useUpdateUnitConfig, useUnitAds, useManageAds, type UnitConfig,
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useUpdateUnitConfig, useUnitAds, useManageAds, type UnitConfig,
   ticketToSpeech, priorityToSpeech,
 } from "@/hooks/useUnitConfig";
+import { useTotemUnits, useTotemUnit, useCreateTotemUnit, useDeleteTotemUnit } from "@/hooks/useTotem";
+import { TicketTypesTab } from "@/components/autoatendimento/TicketTypesTab";
+import { DevicesTab } from "@/components/autoatendimento/DevicesTab";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,17 +17,46 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import {
-  Palette, Image, Tv, Monitor, Settings2, Upload, Trash2, GripVertical,
-  ArrowLeft, Eye, Volume2, Clock, ShieldCheck, Megaphone, Play, Mic, Printer,
+  Palette, Image, Tv, Monitor, Settings2, Upload, Trash2, GripVertical, Plus, Tag,
+  ArrowLeft, Eye, Volume2, Clock, ShieldCheck, Megaphone, Play, Mic, Printer, Building2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminAutoatendimento() {
   const navigate = useNavigate();
-  const { data: config, isLoading } = useUnitConfig();
+  const { data: units } = useTotemUnits();
+  const [selectedUnitId, setSelectedUnitId] = useState<string>("");
+  const createUnit = useCreateTotemUnit();
+  const deleteUnit = useDeleteTotemUnit();
+
+  // Auto-select first unit
+  useEffect(() => {
+    if (!selectedUnitId && units && units.length > 0) {
+      setSelectedUnitId(units[0].id);
+    }
+  }, [units, selectedUnitId]);
+
+  const { data: rawUnit, isLoading } = useTotemUnit(selectedUnitId);
+  // Adapt TotemUnit → UnitConfig shape (unit_name alias)
+  const config = useMemo<UnitConfig | null>(() => rawUnit ? ({ ...rawUnit, unit_name: (rawUnit as any).name } as any) : null, [rawUnit]);
   const updateConfig = useUpdateUnitConfig();
   const { data: ads } = useUnitAds();
   const { add: addAd, remove: removeAd } = useManageAds();
+
+  const handleCreateUnit = async () => {
+    const name = prompt("Nome da nova unidade de totem:");
+    if (!name?.trim()) return;
+    const created = await createUnit.mutateAsync(name.trim());
+    setSelectedUnitId(created.id);
+  };
+
+  const handleDeleteUnit = async () => {
+    if (!selectedUnitId) return;
+    if (!confirm("Remover esta unidade? Todos os totens, tipos de senha e anúncios vinculados serão excluídos.")) return;
+    await deleteUnit.mutateAsync(selectedUnitId);
+    setSelectedUnitId("");
+  };
+
 
   const [unitName, setUnitName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#1e5a8a");
