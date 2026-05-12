@@ -314,6 +314,104 @@ export function useDeleteTicketType() {
   });
 }
 
+/* ===== Ticket type x priorities (N:N) ===== */
+export interface TicketTypePriority {
+  id: string;
+  ticket_type_id: string;
+  priority_code: string;
+  enabled: boolean;
+}
+
+export function useTicketTypePriorities(unitId?: string | null) {
+  return useQuery({
+    queryKey: ["totem_ticket_type_priorities", unitId ?? "all"],
+    queryFn: async () => {
+      let q = (supabase as any)
+        .from("totem_ticket_type_priorities")
+        .select("id, ticket_type_id, priority_code, enabled, totem_ticket_types!inner(unit_id)");
+      if (unitId) q = q.eq("totem_ticket_types.unit_id", unitId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data as any[]).map((r) => ({
+        id: r.id,
+        ticket_type_id: r.ticket_type_id,
+        priority_code: r.priority_code,
+        enabled: r.enabled,
+      })) as TicketTypePriority[];
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useSetTicketTypePriorities() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { ticket_type_id: string; priority_codes: string[] }) => {
+      // delete and re-insert (simple atomic-ish replacement)
+      await (supabase as any).from("totem_ticket_type_priorities").delete().eq("ticket_type_id", params.ticket_type_id);
+      if (params.priority_codes.length > 0) {
+        const rows = params.priority_codes.map((code) => ({
+          ticket_type_id: params.ticket_type_id,
+          priority_code: code,
+          enabled: true,
+        }));
+        const { error } = await (supabase as any).from("totem_ticket_type_priorities").insert(rows);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["totem_ticket_type_priorities"] });
+      toast.success("Prioridades atualizadas");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+/* ===== Institution settings (singleton) ===== */
+export interface InstitutionSettings {
+  id: string;
+  name: string;
+  logo_url: string | null;
+}
+
+export function useInstitutionSettings() {
+  return useQuery({
+    queryKey: ["institution_settings"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("institution_settings")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as InstitutionSettings | null;
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useUpdateInstitutionSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: Partial<InstitutionSettings> & { id: string }) => {
+      const { id, ...rest } = params;
+      const { data, error } = await (supabase as any)
+        .from("institution_settings")
+        .update(rest)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["institution_settings"] });
+      toast.success("Instituição atualizada");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
 /* ===== Selected device (localStorage) ===== */
 export function getSelectedDeviceId(): string | null {
   try {
