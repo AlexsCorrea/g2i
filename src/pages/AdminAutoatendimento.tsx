@@ -1001,6 +1001,7 @@ export default function AdminAutoatendimento() {
             </Card>
           </TabsContent>
         </Tabs>
+        )}
       </div>
     </div>
   );
