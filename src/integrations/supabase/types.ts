@@ -7156,6 +7156,7 @@ export type Database = {
           checkin_data: Json | null
           completed_at: string | null
           created_at: string
+          device_id: string | null
           id: string
           notification_enabled: boolean | null
           notification_token: string | null
@@ -7168,6 +7169,7 @@ export type Database = {
           status: string
           ticket_number: string
           ticket_type: string
+          unit_id: string | null
           updated_at: string
         }
         Insert: {
@@ -7178,6 +7180,7 @@ export type Database = {
           checkin_data?: Json | null
           completed_at?: string | null
           created_at?: string
+          device_id?: string | null
           id?: string
           notification_enabled?: boolean | null
           notification_token?: string | null
@@ -7190,6 +7193,7 @@ export type Database = {
           status?: string
           ticket_number: string
           ticket_type?: string
+          unit_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -7200,6 +7204,7 @@ export type Database = {
           checkin_data?: Json | null
           completed_at?: string | null
           created_at?: string
+          device_id?: string | null
           id?: string
           notification_enabled?: boolean | null
           notification_token?: string | null
@@ -7212,6 +7217,7 @@ export type Database = {
           status?: string
           ticket_number?: string
           ticket_type?: string
+          unit_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -7223,10 +7229,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "queue_tickets_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "totem_devices"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "queue_tickets_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_tickets_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "totem_units"
             referencedColumns: ["id"]
           },
         ]
@@ -8176,6 +8196,256 @@ export type Database = {
           nome?: string
           sigla?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      totem_devices: {
+        Row: {
+          active: boolean
+          created_at: string
+          device_identifier: string | null
+          id: string
+          location: string | null
+          name: string
+          observations: string | null
+          overrides: Json | null
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          device_identifier?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          observations?: string | null
+          overrides?: Json | null
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          device_identifier?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          observations?: string | null
+          overrides?: Json | null
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "totem_devices_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "totem_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      totem_ticket_types: {
+        Row: {
+          active: boolean
+          code: string
+          color: string | null
+          created_at: string
+          display_order: number
+          id: string
+          label: string
+          prefix: string
+          priority: number
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          color?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          label: string
+          prefix?: string
+          priority?: number
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          color?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          label?: string
+          prefix?: string
+          priority?: number
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "totem_ticket_types_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "totem_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      totem_units: {
+        Row: {
+          active: boolean
+          ads_enabled: boolean
+          ads_idle_seconds: number
+          ads_interval_seconds: number
+          background_image_url: string | null
+          call_display_seconds: number
+          created_at: string
+          id: string
+          locution_enabled: boolean
+          locution_speak_location: boolean
+          locution_speak_priority: boolean
+          logo_url: string | null
+          name: string
+          observations: string | null
+          pre_call_sound: string
+          primary_color: string | null
+          print_auto: boolean
+          print_auto_cut: boolean
+          print_block_spacing: number
+          print_copies: number
+          print_cut_extra_height: number
+          print_enabled: boolean
+          print_font_size: string
+          print_footer_text: string
+          print_header_text: string
+          print_margin_bottom: number
+          print_margin_left: number
+          print_margin_right: number
+          print_margin_top: number
+          print_paper_width: string
+          print_show_logo: boolean
+          print_show_qr: boolean
+          print_template: string
+          privacy_mode: string
+          result_countdown_seconds: number
+          secondary_color: string | null
+          show_clock: boolean
+          show_history: boolean
+          social_name_policy: string
+          sound_enabled: boolean
+          totem_checkin: boolean
+          totem_retirar_senha: boolean
+          totem_timeout_seconds: number
+          updated_at: string
+          voice_name: string | null
+          voice_pitch: number
+          voice_rate: number
+          voice_volume: number
+        }
+        Insert: {
+          active?: boolean
+          ads_enabled?: boolean
+          ads_idle_seconds?: number
+          ads_interval_seconds?: number
+          background_image_url?: string | null
+          call_display_seconds?: number
+          created_at?: string
+          id?: string
+          locution_enabled?: boolean
+          locution_speak_location?: boolean
+          locution_speak_priority?: boolean
+          logo_url?: string | null
+          name: string
+          observations?: string | null
+          pre_call_sound?: string
+          primary_color?: string | null
+          print_auto?: boolean
+          print_auto_cut?: boolean
+          print_block_spacing?: number
+          print_copies?: number
+          print_cut_extra_height?: number
+          print_enabled?: boolean
+          print_font_size?: string
+          print_footer_text?: string
+          print_header_text?: string
+          print_margin_bottom?: number
+          print_margin_left?: number
+          print_margin_right?: number
+          print_margin_top?: number
+          print_paper_width?: string
+          print_show_logo?: boolean
+          print_show_qr?: boolean
+          print_template?: string
+          privacy_mode?: string
+          result_countdown_seconds?: number
+          secondary_color?: string | null
+          show_clock?: boolean
+          show_history?: boolean
+          social_name_policy?: string
+          sound_enabled?: boolean
+          totem_checkin?: boolean
+          totem_retirar_senha?: boolean
+          totem_timeout_seconds?: number
+          updated_at?: string
+          voice_name?: string | null
+          voice_pitch?: number
+          voice_rate?: number
+          voice_volume?: number
+        }
+        Update: {
+          active?: boolean
+          ads_enabled?: boolean
+          ads_idle_seconds?: number
+          ads_interval_seconds?: number
+          background_image_url?: string | null
+          call_display_seconds?: number
+          created_at?: string
+          id?: string
+          locution_enabled?: boolean
+          locution_speak_location?: boolean
+          locution_speak_priority?: boolean
+          logo_url?: string | null
+          name?: string
+          observations?: string | null
+          pre_call_sound?: string
+          primary_color?: string | null
+          print_auto?: boolean
+          print_auto_cut?: boolean
+          print_block_spacing?: number
+          print_copies?: number
+          print_cut_extra_height?: number
+          print_enabled?: boolean
+          print_font_size?: string
+          print_footer_text?: string
+          print_header_text?: string
+          print_margin_bottom?: number
+          print_margin_left?: number
+          print_margin_right?: number
+          print_margin_top?: number
+          print_paper_width?: string
+          print_show_logo?: boolean
+          print_show_qr?: boolean
+          print_template?: string
+          privacy_mode?: string
+          result_countdown_seconds?: number
+          secondary_color?: string | null
+          show_clock?: boolean
+          show_history?: boolean
+          social_name_policy?: string
+          sound_enabled?: boolean
+          totem_checkin?: boolean
+          totem_retirar_senha?: boolean
+          totem_timeout_seconds?: number
+          updated_at?: string
+          voice_name?: string | null
+          voice_pitch?: number
+          voice_rate?: number
+          voice_volume?: number
         }
         Relationships: []
       }
