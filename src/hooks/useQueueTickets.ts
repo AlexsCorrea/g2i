@@ -259,24 +259,18 @@ export function useUpdateTicketStatus() {
   });
 }
 
-function getPriorityFromType(type: string): number {
-  switch (type) {
-    case "preferencial_80": return 4;
-    case "preferencial_60": return 3;
-    case "preferencial": return 2;
-    case "retorno_pos_operatorio": return 1;
-    case "consulta": return 1;
-    default: return 0;
-  }
-}
-
-function getPrefixFromType(type: string): string {
+function legacyPrefixFromType(type: string): string {
   switch (type) {
     case "preferencial_80": return "P8";
     case "preferencial_60": return "P6";
     case "preferencial": return "PR";
     case "retorno_pos_operatorio": return "RO";
-    case "consulta": return "CO";
-    default: return "SN";
+    case "retorno": return "R";
+    case "consulta": return "C";
+    case "exames": return "E";
+    case "financeiro": return "F";
+    case "triagem": return "T";
+    case "urgencia": return "U";
+    default: return "N";
   }
 }
