@@ -5,6 +5,7 @@ import {
   getPatientNameForSpeech, ticketToSpeech, priorityToSpeech,
 } from "@/hooks/useUnitConfig";
 import { Volume2, MapPin, Clock } from "lucide-react";
+import { priorityMeta } from "@/lib/queuePriority";
 
 interface QueuedCall {
   id: string;
@@ -284,22 +285,13 @@ export default function QueueTV() {
     return formatPatientDisplay(ticket.patients?.full_name, ticket.patients?.nome_social || null, privacyMode, "").replace(/^\s*—\s*/, "").trim();
   };
 
-  const priorityLabel = (type: string) => {
+  // Type label kept for context (e.g., "Consulta", "Exames")
+  const typeContextLabel = (type: string) => {
     const map: Record<string, string> = {
-      preferencial_80: "80+", preferencial_60: "60+", preferencial: "Preferencial",
-      retorno_pos_operatorio: "Retorno", consulta: "Consulta", normal: "Normal",
+      retorno_pos_operatorio: "Retorno", consulta: "Consulta",
       exames: "Exames", financeiro: "Financeiro", triagem: "Triagem",
     };
     return map[type] || type;
-  };
-
-  const priorityBgColor = (type: string) => {
-    switch (type) {
-      case "preferencial_80": return "rgba(239,68,68,0.4)";
-      case "preferencial_60": return "rgba(249,115,22,0.4)";
-      case "preferencial": return "rgba(234,179,8,0.35)";
-      default: return "rgba(255,255,255,0.15)";
-    }
   };
 
   // ---- RENDER: AD/IDLE MODE ----
@@ -404,9 +396,24 @@ export default function QueueTV() {
               )}
 
               <div className="flex items-center justify-center gap-4 flex-wrap">
-                <span className="px-6 py-2.5 rounded-full text-white text-xl font-bold border border-white/20" style={{ background: priorityBgColor(ticket.ticket_type) }}>
-                  {priorityLabel(ticket.ticket_type)}
-                </span>
+                {(() => {
+                  const meta = priorityMeta(ticket.priority_code);
+                  return (
+                    <>
+                      <span
+                        className="px-6 py-2.5 rounded-full text-white text-xl font-bold border border-white/20"
+                        style={{ background: meta.hex }}
+                      >
+                        {meta.label}
+                      </span>
+                      {ticket.ticket_type && (
+                        <span className="px-5 py-2 rounded-full text-white/90 text-lg font-medium border border-white/20 bg-white/10">
+                          {typeContextLabel(ticket.ticket_type)}
+                        </span>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               {ticket.called_to && (

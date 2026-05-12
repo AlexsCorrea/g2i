@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { DateMaskInput } from "@/components/ui/date-mask-input";
 import { supabase } from "@/integrations/supabase/client";
+import { PriorityBadge } from "@/components/queue/PriorityBadge";
 import { useGenerateTicket, useQueueTicketById, useQueueTickets } from "@/hooks/useQueueTickets";
 import { useUnitConfig } from "@/hooks/useUnitConfig";
 
@@ -580,6 +581,11 @@ export default function Portal() {
           <p className="text-5xl">{st.emoji}</p>
           <p className={`text-sm uppercase tracking-wider font-semibold ${st.color}`}>{st.label}</p>
           <p className={`text-5xl font-black tracking-wider ${st.color}`}>{myTicket.ticket_number}</p>
+          {(myTicket as any).priority_code && (
+            <div className="flex justify-center">
+              <PriorityBadge priorityCode={(myTicket as any).priority_code} size="md" />
+            </div>
+          )}
           {myTicket.status === "aguardando" && queuePosition && (
             <div className="flex items-center justify-center gap-6 text-muted-foreground text-sm">
               <span className="flex items-center gap-1">

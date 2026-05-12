@@ -437,20 +437,52 @@ export default function AdminAutoatendimento() {
                     <div>
                       <Label>Logo da Unidade</Label>
                       <div className="flex items-center gap-4 mt-1">
-                        {config?.logo_url && <img src={config.logo_url} alt="Logo" className="w-16 h-16 rounded-xl object-cover border" />}
+                        {config?.logo_url ? (
+                          <img src={config.logo_url} alt="Logo" className="w-16 h-16 rounded-xl object-cover border" />
+                        ) : (
+                          <div className="w-16 h-16 rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-muted/30">
+                            <Building2 className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                        )}
                         <Button variant="outline" onClick={() => logoFileRef.current?.click()} disabled={uploading}>
                           <Upload className="w-4 h-4 mr-2" /> {config?.logo_url ? "Trocar Logo" : "Enviar Logo"}
                         </Button>
+                        {config?.logo_url && config?.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => updateConfig.mutate({ id: config.id, logo_url: null } as any)}
+                            disabled={uploading}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" /> Remover
+                          </Button>
+                        )}
                         <input ref={logoFileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
                       </div>
                     </div>
                     <div>
                       <Label>Imagem de Fundo (opcional)</Label>
                       <div className="flex items-center gap-4 mt-1">
-                        {config?.background_image_url && <img src={config.background_image_url} alt="BG" className="w-24 h-16 rounded-lg object-cover border" />}
+                        {config?.background_image_url ? (
+                          <img src={config.background_image_url} alt="BG" className="w-24 h-16 rounded-lg object-cover border" />
+                        ) : (
+                          <div className="w-24 h-16 rounded-lg border-2 border-dashed border-border bg-gradient-to-br from-muted/40 to-muted/10 flex items-center justify-center">
+                            <Image className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                        )}
                         <Button variant="outline" onClick={() => bgFileRef.current?.click()} disabled={uploading}>
                           <Image className="w-4 h-4 mr-2" /> {config?.background_image_url ? "Trocar" : "Enviar Imagem"}
                         </Button>
+                        {config?.background_image_url && config?.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => updateConfig.mutate({ id: config.id, background_image_url: null } as any)}
+                            disabled={uploading}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" /> Remover
+                          </Button>
+                        )}
                         <input ref={bgFileRef} type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
                       </div>
                     </div>
