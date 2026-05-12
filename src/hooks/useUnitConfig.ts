@@ -60,17 +60,24 @@ export interface UnitAd {
   created_at: string;
 }
 
+/**
+ * Returns the first active totem unit as the "default" config for legacy callers
+ * (QueueTV, QueuePanel, Portal, LabReports). New code should use useActiveTotemContext().
+ */
 export function useUnitConfig() {
   return useQuery({
-    queryKey: ["unit_config"],
+    queryKey: ["unit_config_default"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("unit_config")
+      const { data, error } = await (supabase as any)
+        .from("totem_units")
         .select("*")
+        .eq("active", true)
+        .order("name")
         .limit(1)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return data as UnitConfig;
+      if (!data) return null as unknown as UnitConfig;
+      return { ...data, unit_name: data.name } as UnitConfig;
     },
     staleTime: 60000,
   });
@@ -80,10 +87,11 @@ export function useUpdateUnitConfig() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (params: Partial<UnitConfig> & { id: string }) => {
-      const { id, ...rest } = params;
-      const { data, error } = await supabase
-        .from("unit_config")
-        .update(rest)
+      const { id, unit_name, ...rest } = params as any;
+      const payload = unit_name ? { ...rest, name: unit_name } : rest;
+      const { data, error } = await (supabase as any)
+        .from("totem_units")
+        .update(payload)
         .eq("id", id)
         .select()
         .single();
@@ -91,7 +99,8 @@ export function useUpdateUnitConfig() {
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["unit_config"] });
+      qc.invalidateQueries({ queryKey: ["unit_config_default"] });
+      qc.invalidateQueries({ queryKey: ["totem_units"] });
       toast.success("Configuração atualizada!");
     },
   });
