@@ -168,6 +168,9 @@ export default function AdminAutoatendimento() {
     }
   }, [config, initialized]);
 
+  // Reset form when switching units
+  useEffect(() => { setInitialized(false); }, [selectedUnitId]);
+
   const handleSave = () => {
     if (!config?.id) return;
     updateConfig.mutate({
