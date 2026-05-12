@@ -346,11 +346,14 @@ export default function AdminAutoatendimento() {
           </div>
         </div>
 
+        {/* Institution settings (global) */}
+        <InstitutionSettingsCard />
+
         {/* Unit selector */}
         <Card>
           <CardContent className="py-4 flex items-center gap-3 flex-wrap">
             <Building2 className="w-5 h-5 text-muted-foreground" />
-            <Label className="text-sm">Unidade de Totem:</Label>
+            <Label className="text-sm">Unidade de Totem (setor):</Label>
             <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
               <SelectTrigger className="w-72"><SelectValue placeholder="Selecione uma unidade" /></SelectTrigger>
               <SelectContent>
@@ -361,10 +364,14 @@ export default function AdminAutoatendimento() {
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" variant="outline" onClick={handleCreateUnit}><Plus className="w-4 h-4 mr-1" /> Nova unidade</Button>
-            {selectedUnitId && (units?.length || 0) > 1 && (
-              <Button size="sm" variant="ghost" className="text-destructive" onClick={handleDeleteUnit}><Trash2 className="w-4 h-4 mr-1" /> Excluir</Button>
-            )}
+            <UnitsManagerDrawer
+              onUnitChanged={(id) => setSelectedUnitId(id)}
+              trigger={
+                <Button size="sm" variant="outline">
+                  <Settings2 className="w-4 h-4 mr-1" /> Gerenciar Unidades
+                </Button>
+              }
+            />
             <span className="text-xs text-muted-foreground ml-auto">
               {units?.length ?? 0} unidade(s) cadastrada(s)
             </span>
