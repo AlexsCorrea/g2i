@@ -1,7 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useUnitConfig, useUpdateUnitConfig, useUnitAds, useManageAds, type UnitConfig,
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useUpdateUnitConfig, useUnitAds, useManageAds, type UnitConfig,
   ticketToSpeech, priorityToSpeech,
 } from "@/hooks/useUnitConfig";
+import { useTotemUnits, useTotemUnit, useCreateTotemUnit, useDeleteTotemUnit } from "@/hooks/useTotem";
+import { TicketTypesTab } from "@/components/autoatendimento/TicketTypesTab";
+import { DevicesTab } from "@/components/autoatendimento/DevicesTab";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,17 +17,46 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import {
-  Palette, Image, Tv, Monitor, Settings2, Upload, Trash2, GripVertical,
-  ArrowLeft, Eye, Volume2, Clock, ShieldCheck, Megaphone, Play, Mic, Printer,
+  Palette, Image, Tv, Monitor, Settings2, Upload, Trash2, GripVertical, Plus, Tag,
+  ArrowLeft, Eye, Volume2, Clock, ShieldCheck, Megaphone, Play, Mic, Printer, Building2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminAutoatendimento() {
   const navigate = useNavigate();
-  const { data: config, isLoading } = useUnitConfig();
+  const { data: units } = useTotemUnits();
+  const [selectedUnitId, setSelectedUnitId] = useState<string>("");
+  const createUnit = useCreateTotemUnit();
+  const deleteUnit = useDeleteTotemUnit();
+
+  // Auto-select first unit
+  useEffect(() => {
+    if (!selectedUnitId && units && units.length > 0) {
+      setSelectedUnitId(units[0].id);
+    }
+  }, [units, selectedUnitId]);
+
+  const { data: rawUnit, isLoading } = useTotemUnit(selectedUnitId);
+  // Adapt TotemUnit → UnitConfig shape (unit_name alias)
+  const config = useMemo<UnitConfig | null>(() => rawUnit ? ({ ...rawUnit, unit_name: (rawUnit as any).name } as any) : null, [rawUnit]);
   const updateConfig = useUpdateUnitConfig();
   const { data: ads } = useUnitAds();
   const { add: addAd, remove: removeAd } = useManageAds();
+
+  const handleCreateUnit = async () => {
+    const name = prompt("Nome da nova unidade de totem:");
+    if (!name?.trim()) return;
+    const created = await createUnit.mutateAsync(name.trim());
+    setSelectedUnitId(created.id);
+  };
+
+  const handleDeleteUnit = async () => {
+    if (!selectedUnitId) return;
+    if (!confirm("Remover esta unidade? Todos os totens, tipos de senha e anúncios vinculados serão excluídos.")) return;
+    await deleteUnit.mutateAsync(selectedUnitId);
+    setSelectedUnitId("");
+  };
+
 
   const [unitName, setUnitName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#1e5a8a");
@@ -135,6 +167,9 @@ export default function AdminAutoatendimento() {
       setInitialized(true);
     }
   }, [config, initialized]);
+
+  // Reset form when switching units
+  useEffect(() => { setInitialized(false); }, [selectedUnitId]);
 
   const handleSave = () => {
     if (!config?.id) return;
@@ -325,8 +360,36 @@ export default function AdminAutoatendimento() {
           </div>
         </div>
 
+        {/* Unit selector */}
+        <Card>
+          <CardContent className="py-4 flex items-center gap-3 flex-wrap">
+            <Building2 className="w-5 h-5 text-muted-foreground" />
+            <Label className="text-sm">Unidade de Totem:</Label>
+            <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
+              <SelectTrigger className="w-72"><SelectValue placeholder="Selecione uma unidade" /></SelectTrigger>
+              <SelectContent>
+                {(units ?? []).map(u => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.name} {!u.active && "(inativa)"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={handleCreateUnit}><Plus className="w-4 h-4 mr-1" /> Nova unidade</Button>
+            {selectedUnitId && (units?.length || 0) > 1 && (
+              <Button size="sm" variant="ghost" className="text-destructive" onClick={handleDeleteUnit}><Trash2 className="w-4 h-4 mr-1" /> Excluir</Button>
+            )}
+            <span className="text-xs text-muted-foreground ml-auto">
+              {units?.length ?? 0} unidade(s) cadastrada(s)
+            </span>
+          </CardContent>
+        </Card>
+
+        {!selectedUnitId ? (
+          <Card><CardContent className="py-12 text-center text-muted-foreground">Selecione ou cadastre uma unidade para configurar.</CardContent></Card>
+        ) : (
         <Tabs defaultValue="branding" className="space-y-6">
-          <TabsList className="grid grid-cols-7 w-full">
+          <TabsList className="grid grid-cols-9 w-full">
             <TabsTrigger value="branding" className="gap-1"><Palette className="w-4 h-4" /> Identidade</TabsTrigger>
             <TabsTrigger value="privacy" className="gap-1"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
             <TabsTrigger value="tv" className="gap-1"><Tv className="w-4 h-4" /> Painel TV</TabsTrigger>
@@ -334,7 +397,17 @@ export default function AdminAutoatendimento() {
             <TabsTrigger value="ads" className="gap-1"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
             <TabsTrigger value="totem" className="gap-1"><Monitor className="w-4 h-4" /> Totem</TabsTrigger>
             <TabsTrigger value="print" className="gap-1"><Printer className="w-4 h-4" /> Impressão</TabsTrigger>
+            <TabsTrigger value="ticket_types" className="gap-1"><Tag className="w-4 h-4" /> Senhas</TabsTrigger>
+            <TabsTrigger value="devices" className="gap-1"><Monitor className="w-4 h-4" /> Totens</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="ticket_types" className="space-y-6">
+            <TicketTypesTab unitId={selectedUnitId} />
+          </TabsContent>
+          <TabsContent value="devices" className="space-y-6">
+            <DevicesTab unitId={selectedUnitId} />
+          </TabsContent>
+
 
           {/* BRANDING TAB */}
           <TabsContent value="branding" className="space-y-6">
@@ -928,6 +1001,7 @@ export default function AdminAutoatendimento() {
             </Card>
           </TabsContent>
         </Tabs>
+        )}
       </div>
     </div>
   );

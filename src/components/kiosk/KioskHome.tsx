@@ -1,17 +1,18 @@
 import React from "react";
 import { Ticket, CalendarCheck, QrCode } from "lucide-react";
-import { useUnitConfig } from "@/hooks/useUnitConfig";
 import type { KioskFlow } from "@/pages/Kiosk";
+import type { TotemUnit } from "@/hooks/useTotem";
 
 interface Props {
   onSelect: (flow: KioskFlow) => void;
+  unit?: TotemUnit | null;
 }
 
-export function KioskHome({ onSelect }: Props) {
+export function KioskHome({ onSelect, unit }: Props) {
   const portalUrl = `${window.location.origin}/portal`;
-  const { data: config } = useUnitConfig();
+  const config = unit;
 
-  const unitName = config?.unit_name || "OftalmoCenter";
+  const unitName = config?.name || "OftalmoCenter";
   const logoUrl = config?.logo_url;
   const primaryColor = config?.primary_color || "#1e5a8a";
 
@@ -56,31 +57,35 @@ export function KioskHome({ onSelect }: Props) {
 
         {/* Buttons section */}
         <div className="flex-1 space-y-4 w-full max-w-sm">
-          <button
-            onClick={() => onSelect("ticket")}
-            className="w-full bg-white rounded-2xl p-6 flex items-center gap-5 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Ticket className="w-8 h-8 text-primary" />
-            </div>
-            <div className="text-left">
-              <h2 className="text-xl font-bold text-foreground">Retirar Senha</h2>
-              <p className="text-sm text-muted-foreground">Retire sua senha para atendimento</p>
-            </div>
-          </button>
+          {(unit?.totem_retirar_senha ?? true) && (
+            <button
+              onClick={() => onSelect("ticket")}
+              className="w-full bg-white rounded-2xl p-6 flex items-center gap-5 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Ticket className="w-8 h-8 text-primary" />
+              </div>
+              <div className="text-left">
+                <h2 className="text-xl font-bold text-foreground">Retirar Senha</h2>
+                <p className="text-sm text-muted-foreground">Retire sua senha para atendimento</p>
+              </div>
+            </button>
+          )}
 
-          <button
-            onClick={() => onSelect("checkin")}
-            className="w-full bg-white rounded-2xl p-6 flex items-center gap-5 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 bg-accent/15">
-              <CalendarCheck className="w-8 h-8 text-accent-foreground" />
-            </div>
-            <div className="text-left">
-              <h2 className="text-xl font-bold text-foreground">Fazer Check-in</h2>
-              <p className="text-sm text-muted-foreground">Já possui consulta agendada? Confirme aqui</p>
-            </div>
-          </button>
+          {(unit?.totem_checkin ?? true) && (
+            <button
+              onClick={() => onSelect("checkin")}
+              className="w-full bg-white rounded-2xl p-6 flex items-center gap-5 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 bg-accent/15">
+                <CalendarCheck className="w-8 h-8 text-accent-foreground" />
+              </div>
+              <div className="text-left">
+                <h2 className="text-xl font-bold text-foreground">Fazer Check-in</h2>
+                <p className="text-sm text-muted-foreground">Já possui consulta agendada? Confirme aqui</p>
+              </div>
+            </button>
+          )}
         </div>
       </div>
 
