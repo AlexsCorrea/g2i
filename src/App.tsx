@@ -20,6 +20,7 @@ import AgendaReports from "./pages/AgendaReports";
 import Autoagendamento from "./pages/Autoagendamento";
 import Dashboards from "./pages/Dashboards";
 import Kiosk from "./pages/Kiosk";
+import KioskSelect from "./pages/KioskSelect";
 import QueueMobile from "./pages/QueueMobile";
 import QueuePanel from "./pages/QueuePanel";
 import QueueTV from "./pages/QueueTV";
