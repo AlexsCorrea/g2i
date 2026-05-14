@@ -20,6 +20,7 @@ import AgendaReports from "./pages/AgendaReports";
 import Autoagendamento from "./pages/Autoagendamento";
 import Dashboards from "./pages/Dashboards";
 import Kiosk from "./pages/Kiosk";
+import KioskSelect from "./pages/KioskSelect";
 import QueueMobile from "./pages/QueueMobile";
 import QueuePanel from "./pages/QueuePanel";
 import QueueTV from "./pages/QueueTV";
@@ -62,6 +63,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/welcome" element={<Welcome />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/kiosk/select" element={<KioskSelect />} />
                 <Route path="/kiosk" element={<Kiosk />} />
                 <Route path="/fila" element={<QueueMobile />} />
                 <Route path="/portal" element={<Portal />} />
