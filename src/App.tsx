@@ -63,6 +63,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/welcome" element={<Welcome />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/kiosk/select" element={<KioskSelect />} />
                 <Route path="/kiosk" element={<Kiosk />} />
                 <Route path="/fila" element={<QueueMobile />} />
                 <Route path="/portal" element={<Portal />} />
