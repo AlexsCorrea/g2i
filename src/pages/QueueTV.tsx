@@ -19,6 +19,26 @@ interface QueuedCall {
 }
 
 export default function QueueTV() {
+  const navigate = useNavigate();
+
+  // Selected TV panel (per-device, localStorage)
+  const [tvPanelId, setTvPanelId] = useState<string | null>(() => getSelectedTvPanelId());
+  useEffect(() => {
+    if (!tvPanelId) navigate("/painel-tv/select", { replace: true });
+  }, [tvPanelId, navigate]);
+  const { data: tvPanel, isLoading: tvLoading, isFetched: tvFetched } = useTvPanel(tvPanelId);
+
+  // If panel was deleted or deactivated -> clear selection and go to /painel-tv/select
+  useEffect(() => {
+    if (!tvPanelId) return;
+    if (!tvFetched) return;
+    if (!tvPanel || tvPanel.is_active === false) {
+      clearSelectedTvPanelId();
+      setTvPanelId(null);
+      navigate("/painel-tv/select", { replace: true });
+    }
+  }, [tvPanelId, tvPanel, tvFetched, navigate]);
+
   const { data: config } = useUnitConfig();
   const { data: ads } = useUnitAds();
   const { data: institution } = useInstitutionSettings();
@@ -45,19 +65,22 @@ export default function QueueTV() {
   const [flashCall, setFlashCall] = useState(false);
   const [pulseScale, setPulseScale] = useState(false);
 
-  // Config values
-  const primaryColor = config?.primary_color || "#1e5a8a";
-  const secondaryColor = config?.secondary_color || "#0f3460";
-  const sectorName = config?.unit_name || "";
+  // Config values — TV panel overrides take precedence over unit config; institution stays brand
+  const primaryColor = tvPanel?.primary_color || config?.primary_color || "#1e5a8a";
+  const secondaryColor = tvPanel?.secondary_color || config?.secondary_color || "#0f3460";
   const institutionName = institution?.name || "OftalmoCenter";
-  const brandLogo = config?.logo_url || institution?.logo_url || null;
-  const footerLine = [institutionName, sectorName, "Painel de Chamadas"].filter(Boolean).join(" • ");
-  const unitName = sectorName; // legacy var name preserved for downstream usages
+  const tvName = tvPanel?.name || "";
+  const brandLogo = tvPanel?.logo_url || institution?.logo_url || config?.logo_url || null;
+  const footerLine = [institutionName, tvName, "Painel de Chamadas"].filter(Boolean).join(" • ");
   const privacyMode = config?.privacy_mode || "senha_iniciais";
   const callDisplaySec = config?.call_display_seconds || 15;
-  const adsEnabled = config?.ads_enabled && ads && ads.length > 0;
+  const adsEnabledTv = tvPanel ? tvPanel.ads_enabled !== false : config?.ads_enabled !== false;
+  const adsEnabled = adsEnabledTv && ads && ads.length > 0;
   const adsIdleSec = config?.ads_idle_seconds || 20;
-  const showClock = config?.show_clock !== false;
+  const showClock = tvPanel ? tvPanel.show_clock !== false : config?.show_clock !== false;
+  const showHistory = tvPanel ? tvPanel.show_history !== false : config?.show_history !== false;
+  const soundEnabled = tvPanel ? tvPanel.sound_enabled !== false : config?.sound_enabled !== false;
+  const locutionEnabled = tvPanel ? tvPanel.locution_enabled !== false : config?.locution_enabled !== false;
   const showHistory = config?.show_history !== false;
   const soundEnabled = config?.sound_enabled !== false;
   const locutionEnabled = config?.locution_enabled !== false;
