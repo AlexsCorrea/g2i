@@ -406,8 +406,8 @@ export default function AdminAutoatendimento() {
           <TabsContent value="branding" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Identidade Visual</CardTitle>
-                <CardDescription>Logo, cores e nome da unidade aplicados no totem, portal mobile e painel TV</CardDescription>
+                <CardTitle>Aparência do Totem</CardTitle>
+                <CardDescription>Visual aplicado ao totem, portal mobile e painel TV desta unidade. A identidade global da clínica/hospital fica no card "Identidade da Instituição" acima.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
