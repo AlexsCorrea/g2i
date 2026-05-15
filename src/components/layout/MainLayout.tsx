@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import TopNav from "./TopNav";
 import { useAuth } from "@/contexts/AuthContext";
 
-const FULL_SCREEN_ROUTES = ["/kiosk", "/painel", "/painel-tv", "/portal", "/fila", "/auth", "/welcome"];
+const FULL_SCREEN_ROUTES = ["/kiosk", "/painel", "/painel-tv", "/painel-tv/select", "/portal", "/fila", "/auth", "/welcome"];
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
