@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Settings as SettingsIcon, ArrowLeftRight } from "lucide-react";
 import { KioskHome } from "@/components/kiosk/KioskHome";
 import { KioskTicket } from "@/components/kiosk/KioskTicket";
@@ -28,6 +29,7 @@ const TIMEOUT_MULTIPLIER: Record<KioskFlow, number> = {
 };
 
 export default function Kiosk() {
+  const navigate = useNavigate();
   const { deviceId, setDeviceId, device, unit, ticketTypes, ticketTypePriorities, isLoading, deviceInactive, unitInactive } = useActiveTotemContext();
   const [flow, setFlow] = useState<KioskFlow>("home");
   const [resultData, setResultData] = useState<KioskResultData | null>(null);
@@ -86,7 +88,7 @@ export default function Kiosk() {
               : "A unidade vinculada a este totem está inativa."}
           </p>
           <button
-            onClick={() => { setDeviceId(null); window.location.reload(); }}
+            onClick={() => navigate("/kiosk/select")}
             className="bg-white text-black rounded-lg px-4 py-2 text-sm font-semibold hover:bg-white/90"
           >
             Selecionar outro totem
@@ -127,12 +129,7 @@ export default function Kiosk() {
         <SettingsIcon className="w-3 h-3" />
         <span>{unit.name} • {device?.name}</span>
         <button
-          onClick={() => {
-            if (confirm("Trocar o totem deste equipamento?")) {
-              setDeviceId(null);
-              window.location.reload();
-            }
-          }}
+          onClick={() => navigate("/kiosk/select")}
           className="hover:text-white transition-colors flex items-center gap-1 ml-1 border-l border-white/20 pl-2"
           title="Trocar totem"
         >

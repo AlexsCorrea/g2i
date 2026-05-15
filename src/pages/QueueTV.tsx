@@ -4,6 +4,7 @@ import {
   useUnitConfig, useUnitAds, formatPatientDisplay,
   getPatientNameForSpeech, ticketToSpeech, priorityToSpeech,
 } from "@/hooks/useUnitConfig";
+import { useInstitutionSettings } from "@/hooks/useTotem";
 import { Volume2, MapPin, Clock } from "lucide-react";
 import { priorityMeta } from "@/lib/queuePriority";
 
@@ -16,6 +17,7 @@ interface QueuedCall {
 export default function QueueTV() {
   const { data: config } = useUnitConfig();
   const { data: ads } = useUnitAds();
+  const { data: institution } = useInstitutionSettings();
 
   // Call queue: display one at a time — ONLY fed by realtime events
   const [callQueue, setCallQueue] = useState<QueuedCall[]>([]);
@@ -42,7 +44,11 @@ export default function QueueTV() {
   // Config values
   const primaryColor = config?.primary_color || "#1e5a8a";
   const secondaryColor = config?.secondary_color || "#0f3460";
-  const unitName = config?.unit_name || "OftalmoCenter";
+  const sectorName = config?.unit_name || "";
+  const institutionName = institution?.name || "OftalmoCenter";
+  const brandLogo = config?.logo_url || institution?.logo_url || null;
+  const footerLine = [institutionName, sectorName, "Painel de Chamadas"].filter(Boolean).join(" • ");
+  const unitName = sectorName; // legacy var name preserved for downstream usages
   const privacyMode = config?.privacy_mode || "senha_iniciais";
   const callDisplaySec = config?.call_display_seconds || 15;
   const adsEnabled = config?.ads_enabled && ads && ads.length > 0;
@@ -302,8 +308,11 @@ export default function QueueTV() {
         {/* Top bar with branding */}
         <div className="h-16 flex items-center justify-between px-8" style={{ background: primaryColor }}>
           <div className="flex items-center gap-3">
-            {config?.logo_url && <img src={config.logo_url} alt="Logo" className="h-10 w-10 rounded-lg object-cover" />}
-            <span className="text-white text-xl font-bold">{unitName}</span>
+            {brandLogo && <img src={brandLogo} alt="Logo" className="h-10 w-10 rounded-lg object-cover" />}
+            <div className="flex flex-col leading-tight">
+              <span className="text-white text-xl font-bold">{institutionName}</span>
+              {sectorName && <span className="text-white/70 text-xs">Setor: {sectorName}</span>}
+            </div>
           </div>
           {showClock && <span className="text-white/80 text-lg font-mono">{timeStr}</span>}
         </div>
@@ -322,7 +331,7 @@ export default function QueueTV() {
         <div className="flex-shrink-0" style={{ background: secondaryColor }}>
           <div className="px-6 py-2 border-b border-white/10 flex items-center justify-between">
             <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">Últimas Chamadas</span>
-            <span className="text-white/30 text-xs">{unitName} • Painel de Chamadas</span>
+            <span className="text-white/30 text-xs">{footerLine}</span>
           </div>
           <div className="px-4 py-2 flex gap-3 overflow-x-auto">
             {recentHistory.length === 0 ? (
@@ -354,8 +363,11 @@ export default function QueueTV() {
       {/* Top bar */}
       <div className="h-20 flex items-center justify-between px-10 bg-black/20">
         <div className="flex items-center gap-4">
-          {config?.logo_url && <img src={config.logo_url} alt="Logo" className="h-12 w-12 rounded-xl object-cover" />}
-          <span className="text-white text-2xl font-bold">{unitName}</span>
+          {brandLogo && <img src={brandLogo} alt="Logo" className="h-12 w-12 rounded-xl object-cover" />}
+          <div className="flex flex-col leading-tight">
+            <span className="text-white text-2xl font-bold">{institutionName}</span>
+            {sectorName && <span className="text-white/60 text-sm">Setor: {sectorName}</span>}
+          </div>
         </div>
         <div className="flex items-center gap-6">
           {callQueue.length > 0 && (
@@ -429,9 +441,10 @@ export default function QueueTV() {
             </div>
           ) : (
             <div className="text-center space-y-6">
-              {config?.logo_url && <img src={config.logo_url} alt="Logo" className="h-24 w-24 rounded-2xl object-cover mx-auto opacity-40" />}
+              {brandLogo && <img src={brandLogo} alt="Logo" className="h-24 w-24 rounded-2xl object-cover mx-auto opacity-40" />}
               <p className="text-white/30 text-5xl font-light">Aguardando chamada</p>
-              <p className="text-white/15 text-xl">{unitName}</p>
+              <p className="text-white/30 text-2xl font-semibold">{institutionName}</p>
+              {sectorName && <p className="text-white/15 text-lg">Setor: {sectorName}</p>}
             </div>
           )}
         </div>
@@ -469,7 +482,7 @@ export default function QueueTV() {
       </div>
 
       <div className="h-10 bg-black/30 flex items-center justify-center">
-        <p className="text-white/20 text-xs">{unitName} • Painel de Chamadas</p>
+        <p className="text-white/20 text-xs">{footerLine}</p>
       </div>
 
       <style>{`
