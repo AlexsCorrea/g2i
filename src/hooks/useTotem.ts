@@ -638,9 +638,51 @@ export function useSelectedDeviceId() {
 /* Resolve unit from selected device, with overrides applied */
 export function useActiveTotemContext() {
   const { deviceId, setDeviceId } = useSelectedDeviceId();
-  const { data: device, isLoading: loadingDevice } = useTotemDevice(deviceId);
-  const { data: unit, isLoading: loadingUnit } = useTotemUnit(device?.unit_id);
-  const { data: ticketTypes } = useTicketTypes(device?.unit_id);
+  const { data: device, isLoading: loadingDevice, isFetched: deviceFetched } = useTotemDevice(deviceId);
+  const { data: unit, isLoading: loadingUnit, isFetched: unitFetched } = useTotemUnit(device?.unit_id);
+  const { data: legacyTypes } = useTicketTypes(device?.unit_id);
+  const { data: unitTypes } = useUnitTicketTypes(device?.unit_id);
+  const { data: legacyPrios } = useTicketTypePriorities(device?.unit_id);
+
+  // Validate device existence/active and unit active
+  useEffect(() => {
+    if (!deviceId || !deviceFetched) return;
+    if (!device) {
+      // device id no longer exists — clear
+      setSelectedDeviceId(null);
+    }
+  }, [deviceId, deviceFetched, device]);
+
+  const deviceInactive = !!device && device.active === false;
+  const unitInactive = !!unit && unit.active === false;
+
+  // Prefer NEW model — if unit has links, project them into legacy shape so kiosk code keeps working
+  const ticketTypes: TotemTicketType[] = (unitTypes && unitTypes.length > 0)
+    ? unitTypes
+        .filter((r) => r.enabled && r.global?.active !== false)
+        .map((r) => ({
+          id: r.id, // link id (used as identifier through kiosk)
+          unit_id: r.unit_id,
+          code: r.global.code,
+          label: r.global.label,
+          prefix: r.global.prefix,
+          priority: 0,
+          color: r.color_override || r.global.color || "#1e5a8a",
+          display_order: r.display_order,
+          active: true,
+        }))
+    : (legacyTypes ?? []);
+
+  const ticketTypePriorities: TicketTypePriority[] = (unitTypes && unitTypes.length > 0)
+    ? unitTypes.flatMap((r) =>
+        r.priority_codes.map((code) => ({
+          id: `${r.id}-${code}`,
+          ticket_type_id: r.id, // matches projected ticketType.id above
+          priority_code: code,
+          enabled: true,
+        })),
+      )
+    : (legacyPrios ?? []);
 
   // Merge overrides over unit config
   const effectiveUnit: TotemUnit | null =
@@ -653,8 +695,12 @@ export function useActiveTotemContext() {
     setDeviceId,
     device: device ?? null,
     unit: effectiveUnit,
-    ticketTypes: ticketTypes ?? [],
+    ticketTypes,
+    ticketTypePriorities,
     isLoading: loadingDevice || loadingUnit,
-    isReady: !!deviceId && !!device && !!unit,
+    isReady: !!deviceId && !!device && !!unit && !deviceInactive && !unitInactive,
+    deviceInactive,
+    unitInactive,
+    deviceMissing: !!deviceId && deviceFetched && !device,
   };
 }
