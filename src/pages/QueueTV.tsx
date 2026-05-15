@@ -4,6 +4,7 @@ import {
   useUnitConfig, useUnitAds, formatPatientDisplay,
   getPatientNameForSpeech, ticketToSpeech, priorityToSpeech,
 } from "@/hooks/useUnitConfig";
+import { useInstitutionSettings } from "@/hooks/useTotem";
 import { Volume2, MapPin, Clock } from "lucide-react";
 import { priorityMeta } from "@/lib/queuePriority";
 
