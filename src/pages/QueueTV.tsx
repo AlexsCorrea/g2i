@@ -482,7 +482,7 @@ export default function QueueTV() {
       </div>
 
       <div className="h-10 bg-black/30 flex items-center justify-center">
-        <p className="text-white/20 text-xs">{unitName} • Painel de Chamadas</p>
+        <p className="text-white/20 text-xs">{footerLine}</p>
       </div>
 
       <style>{`
