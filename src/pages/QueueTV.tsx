@@ -335,7 +335,7 @@ export default function QueueTV() {
             {brandLogo && <img src={brandLogo} alt="Logo" className="h-10 w-10 rounded-lg object-cover" />}
             <div className="flex flex-col leading-tight">
               <span className="text-white text-xl font-bold">{institutionName}</span>
-              {sectorName && <span className="text-white/70 text-xs">Setor: {sectorName}</span>}
+              {tvName && <span className="text-white/70 text-xs">Setor: {tvName}</span>}
             </div>
           </div>
           {showClock && <span className="text-white/80 text-lg font-mono">{timeStr}</span>}
@@ -390,7 +390,7 @@ export default function QueueTV() {
           {brandLogo && <img src={brandLogo} alt="Logo" className="h-12 w-12 rounded-xl object-cover" />}
           <div className="flex flex-col leading-tight">
             <span className="text-white text-2xl font-bold">{institutionName}</span>
-            {sectorName && <span className="text-white/60 text-sm">Setor: {sectorName}</span>}
+            {tvName && <span className="text-white/60 text-sm">Setor: {tvName}</span>}
           </div>
         </div>
         <div className="flex items-center gap-6">
@@ -468,7 +468,7 @@ export default function QueueTV() {
               {brandLogo && <img src={brandLogo} alt="Logo" className="h-24 w-24 rounded-2xl object-cover mx-auto opacity-40" />}
               <p className="text-white/30 text-5xl font-light">Aguardando chamada</p>
               <p className="text-white/30 text-2xl font-semibold">{institutionName}</p>
-              {sectorName && <p className="text-white/15 text-lg">Setor: {sectorName}</p>}
+              {tvName && <p className="text-white/15 text-lg">Setor: {tvName}</p>}
             </div>
           )}
         </div>
