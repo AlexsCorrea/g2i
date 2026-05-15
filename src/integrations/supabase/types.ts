@@ -7171,6 +7171,35 @@ export type Database = {
           },
         ]
       }
+      queue_ticket_tv_targets: {
+        Row: {
+          created_at: string
+          id: string
+          ticket_id: string
+          tv_panel_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ticket_id: string
+          tv_panel_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ticket_id?: string
+          tv_panel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_ticket_tv_targets_tv_panel_id_fkey"
+            columns: ["tv_panel_id"]
+            isOneToOne: false
+            referencedRelation: "tv_panels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       queue_tickets: {
         Row: {
           appointment_id: string | null
@@ -8621,6 +8650,60 @@ export type Database = {
           voice_pitch?: number
           voice_rate?: number
           voice_volume?: number
+        }
+        Relationships: []
+      }
+      tv_panels: {
+        Row: {
+          ads_enabled: boolean
+          created_at: string
+          id: string
+          is_active: boolean
+          location: string | null
+          locution_enabled: boolean
+          logo_url: string | null
+          name: string
+          notes: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          show_clock: boolean
+          show_history: boolean
+          sound_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          ads_enabled?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          locution_enabled?: boolean
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          show_clock?: boolean
+          show_history?: boolean
+          sound_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ads_enabled?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          locution_enabled?: boolean
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          show_clock?: boolean
+          show_history?: boolean
+          sound_enabled?: boolean
+          updated_at?: string
         }
         Relationships: []
       }

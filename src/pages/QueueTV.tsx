@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   useUnitConfig, useUnitAds, formatPatientDisplay,
   getPatientNameForSpeech, ticketToSpeech, priorityToSpeech,
 } from "@/hooks/useUnitConfig";
 import { useInstitutionSettings } from "@/hooks/useTotem";
+import {
+  getSelectedTvPanelId, clearSelectedTvPanelId, useTvPanel,
+} from "@/hooks/useTvPanels";
 import { Volume2, MapPin, Clock } from "lucide-react";
 import { priorityMeta } from "@/lib/queuePriority";
 
@@ -15,6 +19,26 @@ interface QueuedCall {
 }
 
 export default function QueueTV() {
+  const navigate = useNavigate();
+
+  // Selected TV panel (per-device, localStorage)
+  const [tvPanelId, setTvPanelId] = useState<string | null>(() => getSelectedTvPanelId());
+  useEffect(() => {
+    if (!tvPanelId) navigate("/painel-tv/select", { replace: true });
+  }, [tvPanelId, navigate]);
+  const { data: tvPanel, isLoading: tvLoading, isFetched: tvFetched } = useTvPanel(tvPanelId);
+
+  // If panel was deleted or deactivated -> clear selection and go to /painel-tv/select
+  useEffect(() => {
+    if (!tvPanelId) return;
+    if (!tvFetched) return;
+    if (!tvPanel || tvPanel.is_active === false) {
+      clearSelectedTvPanelId();
+      setTvPanelId(null);
+      navigate("/painel-tv/select", { replace: true });
+    }
+  }, [tvPanelId, tvPanel, tvFetched, navigate]);
+
   const { data: config } = useUnitConfig();
   const { data: ads } = useUnitAds();
   const { data: institution } = useInstitutionSettings();
@@ -41,22 +65,22 @@ export default function QueueTV() {
   const [flashCall, setFlashCall] = useState(false);
   const [pulseScale, setPulseScale] = useState(false);
 
-  // Config values
-  const primaryColor = config?.primary_color || "#1e5a8a";
-  const secondaryColor = config?.secondary_color || "#0f3460";
-  const sectorName = config?.unit_name || "";
+  // Config values — TV panel overrides take precedence over unit config; institution stays brand
+  const primaryColor = tvPanel?.primary_color || config?.primary_color || "#1e5a8a";
+  const secondaryColor = tvPanel?.secondary_color || config?.secondary_color || "#0f3460";
   const institutionName = institution?.name || "OftalmoCenter";
-  const brandLogo = config?.logo_url || institution?.logo_url || null;
-  const footerLine = [institutionName, sectorName, "Painel de Chamadas"].filter(Boolean).join(" • ");
-  const unitName = sectorName; // legacy var name preserved for downstream usages
+  const tvName = tvPanel?.name || "";
+  const brandLogo = tvPanel?.logo_url || institution?.logo_url || config?.logo_url || null;
+  const footerLine = [institutionName, tvName, "Painel de Chamadas"].filter(Boolean).join(" • ");
   const privacyMode = config?.privacy_mode || "senha_iniciais";
   const callDisplaySec = config?.call_display_seconds || 15;
-  const adsEnabled = config?.ads_enabled && ads && ads.length > 0;
+  const adsEnabledTv = tvPanel ? tvPanel.ads_enabled !== false : config?.ads_enabled !== false;
+  const adsEnabled = adsEnabledTv && ads && ads.length > 0;
   const adsIdleSec = config?.ads_idle_seconds || 20;
-  const showClock = config?.show_clock !== false;
-  const showHistory = config?.show_history !== false;
-  const soundEnabled = config?.sound_enabled !== false;
-  const locutionEnabled = config?.locution_enabled !== false;
+  const showClock = tvPanel ? tvPanel.show_clock !== false : config?.show_clock !== false;
+  const showHistory = tvPanel ? tvPanel.show_history !== false : config?.show_history !== false;
+  const soundEnabled = tvPanel ? tvPanel.sound_enabled !== false : config?.sound_enabled !== false;
+  const locutionEnabled = tvPanel ? tvPanel.locution_enabled !== false : config?.locution_enabled !== false;
   const speakPriority = config?.locution_speak_priority !== false;
   const speakLocation = config?.locution_speak_location === true;
   const voiceRate = config?.voice_rate || 0.85;
@@ -311,7 +335,7 @@ export default function QueueTV() {
             {brandLogo && <img src={brandLogo} alt="Logo" className="h-10 w-10 rounded-lg object-cover" />}
             <div className="flex flex-col leading-tight">
               <span className="text-white text-xl font-bold">{institutionName}</span>
-              {sectorName && <span className="text-white/70 text-xs">Setor: {sectorName}</span>}
+              {tvName && <span className="text-white/70 text-xs">Painel: {tvName}</span>}
             </div>
           </div>
           {showClock && <span className="text-white/80 text-lg font-mono">{timeStr}</span>}
@@ -329,9 +353,16 @@ export default function QueueTV() {
 
         {/* Persistent recent calls footer */}
         <div className="flex-shrink-0" style={{ background: secondaryColor }}>
-          <div className="px-6 py-2 border-b border-white/10 flex items-center justify-between">
+          <div className="px-6 py-2 border-b border-white/10 flex items-center justify-between gap-3">
             <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">Últimas Chamadas</span>
-            <span className="text-white/30 text-xs">{footerLine}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-white/30 text-xs">{footerLine}</span>
+              <button
+                onClick={() => navigate("/painel-tv/select")}
+                className="text-white/30 hover:text-white/70 text-[11px] underline-offset-2 hover:underline transition-colors"
+                title="Trocar TV"
+              >Trocar TV</button>
+            </div>
           </div>
           <div className="px-4 py-2 flex gap-3 overflow-x-auto">
             {recentHistory.length === 0 ? (
@@ -366,7 +397,7 @@ export default function QueueTV() {
           {brandLogo && <img src={brandLogo} alt="Logo" className="h-12 w-12 rounded-xl object-cover" />}
           <div className="flex flex-col leading-tight">
             <span className="text-white text-2xl font-bold">{institutionName}</span>
-            {sectorName && <span className="text-white/60 text-sm">Setor: {sectorName}</span>}
+            {tvName && <span className="text-white/60 text-sm">Painel: {tvName}</span>}
           </div>
         </div>
         <div className="flex items-center gap-6">
@@ -444,7 +475,7 @@ export default function QueueTV() {
               {brandLogo && <img src={brandLogo} alt="Logo" className="h-24 w-24 rounded-2xl object-cover mx-auto opacity-40" />}
               <p className="text-white/30 text-5xl font-light">Aguardando chamada</p>
               <p className="text-white/30 text-2xl font-semibold">{institutionName}</p>
-              {sectorName && <p className="text-white/15 text-lg">Setor: {sectorName}</p>}
+              {tvName && <p className="text-white/15 text-lg">Painel: {tvName}</p>}
             </div>
           )}
         </div>
@@ -481,8 +512,15 @@ export default function QueueTV() {
         )}
       </div>
 
-      <div className="h-10 bg-black/30 flex items-center justify-center">
+      <div className="h-10 bg-black/30 flex items-center justify-center px-4 gap-3 relative">
         <p className="text-white/20 text-xs">{footerLine}</p>
+        <button
+          onClick={() => navigate("/painel-tv/select")}
+          className="absolute right-3 text-white/30 hover:text-white/70 text-[11px] underline-offset-2 hover:underline transition-colors"
+          title="Trocar TV"
+        >
+          Trocar TV
+        </button>
       </div>
 
       <style>{`

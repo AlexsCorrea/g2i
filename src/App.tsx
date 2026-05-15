@@ -21,6 +21,7 @@ import Autoagendamento from "./pages/Autoagendamento";
 import Dashboards from "./pages/Dashboards";
 import Kiosk from "./pages/Kiosk";
 import KioskSelect from "./pages/KioskSelect";
+import QueueTvSelect from "./pages/QueueTvSelect";
 import QueueMobile from "./pages/QueueMobile";
 import QueuePanel from "./pages/QueuePanel";
 import QueueTV from "./pages/QueueTV";
@@ -68,6 +69,7 @@ function App() {
                 <Route path="/fila" element={<QueueMobile />} />
                 <Route path="/portal" element={<Portal />} />
                 <Route path="/painel" element={<QueuePanel />} />
+                <Route path="/painel-tv/select" element={<QueueTvSelect />} />
                 <Route path="/painel-tv" element={<QueueTV />} />
                 <Route path="/autoagendamento" element={<Autoagendamento />} />
 
