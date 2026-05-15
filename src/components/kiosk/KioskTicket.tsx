@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ArrowLeft, Tag, ChevronLeft } from "lucide-react";
 import { useGenerateTicket } from "@/hooks/useQueueTickets";
-import { useTicketTypePriorities, type TotemTicketType } from "@/hooks/useTotem";
+import { useTicketTypePriorities, type TotemTicketType, type TicketTypePriority } from "@/hooks/useTotem";
 import { PRIORITY_LIST, priorityMeta, type PriorityCode } from "@/lib/queuePriority";
 import type { KioskResultData } from "@/pages/Kiosk";
 import type { UnitConfig } from "@/hooks/useUnitConfig";
@@ -11,13 +11,15 @@ interface Props {
   onResult: (data: KioskResultData) => void;
   config?: UnitConfig | null;
   ticketTypes: TotemTicketType[];
+  typePriorities?: TicketTypePriority[];
   unitId: string;
   deviceId: string;
 }
 
-export function KioskTicket({ onBack, onResult, ticketTypes, unitId, deviceId }: Props) {
+export function KioskTicket({ onBack, onResult, ticketTypes, typePriorities: typePrioritiesProp, unitId, deviceId }: Props) {
   const generateTicket = useGenerateTicket();
-  const { data: typePriorities } = useTicketTypePriorities(unitId);
+  const { data: typePrioritiesFetched } = useTicketTypePriorities(typePrioritiesProp ? null : unitId);
+  const typePriorities = typePrioritiesProp ?? typePrioritiesFetched;
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<TotemTicketType | null>(null);
 
