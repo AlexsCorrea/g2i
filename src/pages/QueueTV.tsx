@@ -353,9 +353,16 @@ export default function QueueTV() {
 
         {/* Persistent recent calls footer */}
         <div className="flex-shrink-0" style={{ background: secondaryColor }}>
-          <div className="px-6 py-2 border-b border-white/10 flex items-center justify-between">
+          <div className="px-6 py-2 border-b border-white/10 flex items-center justify-between gap-3">
             <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">Últimas Chamadas</span>
-            <span className="text-white/30 text-xs">{footerLine}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-white/30 text-xs">{footerLine}</span>
+              <button
+                onClick={() => navigate("/painel-tv/select")}
+                className="text-white/30 hover:text-white/70 text-[11px] underline-offset-2 hover:underline transition-colors"
+                title="Trocar TV"
+              >Trocar TV</button>
+            </div>
           </div>
           <div className="px-4 py-2 flex gap-3 overflow-x-auto">
             {recentHistory.length === 0 ? (
