@@ -117,7 +117,7 @@ export default function Kiosk() {
     <div className="min-h-screen flex items-center justify-center p-4 relative" style={bgStyle}>
       <div className="w-full max-w-lg">
         {flow === "home" && <KioskHome onSelect={setFlow} unit={unit} />}
-        {flow === "ticket" && <KioskTicket onBack={goHome} onResult={showResult} config={legacyConfig} ticketTypes={ticketTypes} unitId={unit.id} deviceId={deviceId} />}
+        {flow === "ticket" && <KioskTicket onBack={goHome} onResult={showResult} config={legacyConfig} ticketTypes={ticketTypes} typePriorities={ticketTypePriorities} unitId={unit.id} deviceId={deviceId} />}
         {flow === "checkin" && <KioskCheckin onBack={goHome} onResult={showResult} />}
         {flow === "result" && resultData && <KioskResult data={resultData} onBack={goHome} config={legacyConfig} />}
       </div>
