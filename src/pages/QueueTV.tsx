@@ -81,9 +81,6 @@ export default function QueueTV() {
   const showHistory = tvPanel ? tvPanel.show_history !== false : config?.show_history !== false;
   const soundEnabled = tvPanel ? tvPanel.sound_enabled !== false : config?.sound_enabled !== false;
   const locutionEnabled = tvPanel ? tvPanel.locution_enabled !== false : config?.locution_enabled !== false;
-  const showHistory = config?.show_history !== false;
-  const soundEnabled = config?.sound_enabled !== false;
-  const locutionEnabled = config?.locution_enabled !== false;
   const speakPriority = config?.locution_speak_priority !== false;
   const speakLocation = config?.locution_speak_location === true;
   const voiceRate = config?.voice_rate || 0.85;
