@@ -322,7 +322,7 @@ export default function AdminAutoatendimento() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
@@ -382,17 +382,19 @@ export default function AdminAutoatendimento() {
           <Card><CardContent className="py-12 text-center text-muted-foreground">Selecione ou cadastre uma unidade para configurar.</CardContent></Card>
         ) : (
         <Tabs defaultValue="branding" className="space-y-6">
-          <TabsList className="grid grid-cols-9 w-full">
-            <TabsTrigger value="branding" className="gap-1"><Palette className="w-4 h-4" /> Aparência do Totem</TabsTrigger>
-            <TabsTrigger value="privacy" className="gap-1"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
-            <TabsTrigger value="tv" className="gap-1"><Tv className="w-4 h-4" /> Painel TV</TabsTrigger>
-            <TabsTrigger value="voice" className="gap-1"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
-            <TabsTrigger value="ads" className="gap-1"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
-            <TabsTrigger value="totem" className="gap-1"><Monitor className="w-4 h-4" /> Totem</TabsTrigger>
-            <TabsTrigger value="print" className="gap-1"><Printer className="w-4 h-4" /> Impressão</TabsTrigger>
-            <TabsTrigger value="ticket_types" className="gap-1"><Tag className="w-4 h-4" /> Senhas</TabsTrigger>
-            <TabsTrigger value="devices" className="gap-1"><Monitor className="w-4 h-4" /> Totens</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-1 px-1 pb-1">
+            <TabsList className="inline-flex w-max gap-1 h-auto p-1">
+              <TabsTrigger value="branding" className="gap-1.5 whitespace-nowrap px-3"><Palette className="w-4 h-4" /> Aparência do Totem</TabsTrigger>
+              <TabsTrigger value="ticket_types" className="gap-1.5 whitespace-nowrap px-3"><Tag className="w-4 h-4" /> Senhas</TabsTrigger>
+              <TabsTrigger value="privacy" className="gap-1.5 whitespace-nowrap px-3"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
+              <TabsTrigger value="tv" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Painel TV</TabsTrigger>
+              <TabsTrigger value="voice" className="gap-1.5 whitespace-nowrap px-3"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
+              <TabsTrigger value="ads" className="gap-1.5 whitespace-nowrap px-3"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
+              <TabsTrigger value="totem" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totem</TabsTrigger>
+              <TabsTrigger value="print" className="gap-1.5 whitespace-nowrap px-3"><Printer className="w-4 h-4" /> Impressão</TabsTrigger>
+              <TabsTrigger value="devices" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totens Físicos</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="ticket_types" className="space-y-6">
             <TicketTypesTab unitId={selectedUnitId} />
@@ -413,8 +415,12 @@ export default function AdminAutoatendimento() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <Label>Nome da Instituição</Label>
-                      <Input value={unitName} onChange={e => setUnitName(e.target.value)} placeholder="Nome da unidade" />
+                      <Label>Nome exibido no totem (setor)</Label>
+                      <Input value={unitName} onChange={e => setUnitName(e.target.value)} placeholder="Ex.: Centro Cirúrgico, Pronto-Socorro…" />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Aparece como contexto operacional no totem, portal e painel.
+                        A marca da instituição vem do card "Identidade da Instituição" (acima).
+                      </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
