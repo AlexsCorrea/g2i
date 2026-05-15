@@ -17,6 +17,7 @@ interface QueuedCall {
 export default function QueueTV() {
   const { data: config } = useUnitConfig();
   const { data: ads } = useUnitAds();
+  const { data: institution } = useInstitutionSettings();
 
   // Call queue: display one at a time — ONLY fed by realtime events
   const [callQueue, setCallQueue] = useState<QueuedCall[]>([]);
