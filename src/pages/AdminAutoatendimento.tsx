@@ -383,7 +383,7 @@ export default function AdminAutoatendimento() {
         ) : (
         <Tabs defaultValue="branding" className="space-y-6">
           <TabsList className="grid grid-cols-9 w-full">
-            <TabsTrigger value="branding" className="gap-1"><Palette className="w-4 h-4" /> Identidade</TabsTrigger>
+            <TabsTrigger value="branding" className="gap-1"><Palette className="w-4 h-4" /> Aparência do Totem</TabsTrigger>
             <TabsTrigger value="privacy" className="gap-1"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
             <TabsTrigger value="tv" className="gap-1"><Tv className="w-4 h-4" /> Painel TV</TabsTrigger>
             <TabsTrigger value="voice" className="gap-1"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
