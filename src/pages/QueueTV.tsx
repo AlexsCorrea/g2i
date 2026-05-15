@@ -505,8 +505,15 @@ export default function QueueTV() {
         )}
       </div>
 
-      <div className="h-10 bg-black/30 flex items-center justify-center">
+      <div className="h-10 bg-black/30 flex items-center justify-center px-4 gap-3 relative">
         <p className="text-white/20 text-xs">{footerLine}</p>
+        <button
+          onClick={() => navigate("/painel-tv/select")}
+          className="absolute right-3 text-white/30 hover:text-white/70 text-[11px] underline-offset-2 hover:underline transition-colors"
+          title="Trocar TV"
+        >
+          Trocar TV
+        </button>
       </div>
 
       <style>{`
