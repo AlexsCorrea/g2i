@@ -29,6 +29,7 @@ const TIMEOUT_MULTIPLIER: Record<KioskFlow, number> = {
 };
 
 export default function Kiosk() {
+  const navigate = useNavigate();
   const { deviceId, setDeviceId, device, unit, ticketTypes, ticketTypePriorities, isLoading, deviceInactive, unitInactive } = useActiveTotemContext();
   const [flow, setFlow] = useState<KioskFlow>("home");
   const [resultData, setResultData] = useState<KioskResultData | null>(null);
