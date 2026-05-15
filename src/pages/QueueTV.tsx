@@ -441,9 +441,10 @@ export default function QueueTV() {
             </div>
           ) : (
             <div className="text-center space-y-6">
-              {config?.logo_url && <img src={config.logo_url} alt="Logo" className="h-24 w-24 rounded-2xl object-cover mx-auto opacity-40" />}
+              {brandLogo && <img src={brandLogo} alt="Logo" className="h-24 w-24 rounded-2xl object-cover mx-auto opacity-40" />}
               <p className="text-white/30 text-5xl font-light">Aguardando chamada</p>
-              <p className="text-white/15 text-xl">{unitName}</p>
+              <p className="text-white/30 text-2xl font-semibold">{institutionName}</p>
+              {sectorName && <p className="text-white/15 text-lg">Setor: {sectorName}</p>}
             </div>
           )}
         </div>
