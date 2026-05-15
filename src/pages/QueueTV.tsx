@@ -331,7 +331,7 @@ export default function QueueTV() {
         <div className="flex-shrink-0" style={{ background: secondaryColor }}>
           <div className="px-6 py-2 border-b border-white/10 flex items-center justify-between">
             <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">Últimas Chamadas</span>
-            <span className="text-white/30 text-xs">{unitName} • Painel de Chamadas</span>
+            <span className="text-white/30 text-xs">{footerLine}</span>
           </div>
           <div className="px-4 py-2 flex gap-3 overflow-x-auto">
             {recentHistory.length === 0 ? (
