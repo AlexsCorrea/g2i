@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useUpdateUnitConfig, useUnitAds, useManageAds, type UnitConfig,
   ticketToSpeech, priorityToSpeech,
 } from "@/hooks/useUnitConfig";
-import { useTotemUnits, useTotemUnit, useDeleteTotemUnit } from "@/hooks/useTotem";
+import { useTotemUnits, useTotemUnit, useDeleteTotemUnit, useInstitutionSettings } from "@/hooks/useTotem";
 import { TicketTypesTab } from "@/components/autoatendimento/TicketTypesTab";
 import { DevicesTab } from "@/components/autoatendimento/DevicesTab";
 import { UnitsManagerDrawer } from "@/components/autoatendimento/UnitsManagerDrawer";
@@ -27,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 export default function AdminAutoatendimento() {
   const navigate = useNavigate();
   const { data: units } = useTotemUnits();
+  const { data: institution } = useInstitutionSettings();
   const [selectedUnitId, setSelectedUnitId] = useState<string>("");
   const deleteUnit = useDeleteTotemUnit();
 
@@ -499,11 +500,16 @@ export default function AdminAutoatendimento() {
                   </div>
                 </div>
                 <div>
-                  <Label className="mb-2 block">Pré-visualização</Label>
+                  <Label className="mb-2 block">Pré-visualização do totem</Label>
                   <div className="rounded-xl overflow-hidden border" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}>
-                    <div className="h-14 flex items-center px-6 gap-3 bg-black/20">
-                      {config?.logo_url && <img src={config.logo_url} alt="Logo" className="w-8 h-8 rounded-lg object-cover" />}
-                      <span className="text-white font-bold text-lg">{unitName || "Nome da Unidade"}</span>
+                    <div className="h-16 flex items-center px-6 gap-3 bg-black/20">
+                      {(config?.logo_url || institution?.logo_url) && (
+                        <img src={config?.logo_url || institution?.logo_url || ""} alt="Logo" className="w-9 h-9 rounded-lg object-cover" />
+                      )}
+                      <div className="leading-tight">
+                        <div className="text-white font-bold text-base">{institution?.name || "Instituição"}</div>
+                        <div className="text-white/80 text-xs">Autoatendimento — {unitName || "Setor"}</div>
+                      </div>
                     </div>
                     <div className="p-8 text-center">
                       <p className="text-white/60 text-sm">SENHA CHAMADA</p>
