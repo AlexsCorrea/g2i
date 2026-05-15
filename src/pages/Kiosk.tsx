@@ -88,7 +88,7 @@ export default function Kiosk() {
               : "A unidade vinculada a este totem está inativa."}
           </p>
           <button
-            onClick={() => { setDeviceId(null); window.location.reload(); }}
+            onClick={() => navigate("/kiosk/select")}
             className="bg-white text-black rounded-lg px-4 py-2 text-sm font-semibold hover:bg-white/90"
           >
             Selecionar outro totem
