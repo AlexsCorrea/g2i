@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Settings as SettingsIcon, ArrowLeftRight } from "lucide-react";
 import { KioskHome } from "@/components/kiosk/KioskHome";
 import { KioskTicket } from "@/components/kiosk/KioskTicket";
