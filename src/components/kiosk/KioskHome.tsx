@@ -2,6 +2,7 @@ import React from "react";
 import { Ticket, CalendarCheck, QrCode } from "lucide-react";
 import type { KioskFlow } from "@/pages/Kiosk";
 import type { TotemUnit } from "@/hooks/useTotem";
+import { useInstitutionSettings } from "@/hooks/useTotem";
 
 interface Props {
   onSelect: (flow: KioskFlow) => void;
@@ -10,15 +11,17 @@ interface Props {
 
 export function KioskHome({ onSelect, unit }: Props) {
   const portalUrl = `${window.location.origin}/portal`;
-  const config = unit;
+  const { data: institution } = useInstitutionSettings();
 
-  const unitName = config?.name || "OftalmoCenter";
-  const logoUrl = config?.logo_url;
-  const primaryColor = config?.primary_color || "#1e5a8a";
+  const institutionName = institution?.name || "Instituição";
+  const sectorName = unit?.name || "";
+  // Logo: prefer unit-specific, fallback to institutional
+  const logoUrl = unit?.logo_url || institution?.logo_url || null;
+  const primaryColor = unit?.primary_color || "#1e5a8a";
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] gap-10">
-      {/* Header */}
+      {/* Header — institution = brand, sector = context */}
       <div className="text-center space-y-2">
         <div className="w-16 h-16 mx-auto bg-white/20 rounded-2xl flex items-center justify-center overflow-hidden">
           {logoUrl ? (
@@ -27,8 +30,11 @@ export function KioskHome({ onSelect, unit }: Props) {
             <span className="text-3xl">🏥</span>
           )}
         </div>
-        <h1 className="text-3xl font-bold text-white">Bem-vindo à {unitName}</h1>
-        <p className="text-white/70 text-base">Escolha uma opção para continuar</p>
+        <h1 className="text-3xl font-bold text-white leading-tight">{institutionName}</h1>
+        {sectorName && (
+          <p className="text-white/80 text-base">Autoatendimento — {sectorName}</p>
+        )}
+        <p className="text-white/60 text-sm pt-1">Escolha uma opção para continuar</p>
       </div>
 
       {/* Main content: QR left, buttons right */}
@@ -89,7 +95,9 @@ export function KioskHome({ onSelect, unit }: Props) {
         </div>
       </div>
 
-      <p className="text-white/40 text-xs">{unitName} • Autoatendimento</p>
+      <p className="text-white/40 text-xs">
+        {institutionName}{sectorName ? ` • ${sectorName}` : ""} • Autoatendimento
+      </p>
     </div>
   );
 }

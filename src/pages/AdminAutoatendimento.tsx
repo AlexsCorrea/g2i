@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useUpdateUnitConfig, useUnitAds, useManageAds, type UnitConfig,
   ticketToSpeech, priorityToSpeech,
 } from "@/hooks/useUnitConfig";
-import { useTotemUnits, useTotemUnit, useDeleteTotemUnit } from "@/hooks/useTotem";
+import { useTotemUnits, useTotemUnit, useDeleteTotemUnit, useInstitutionSettings } from "@/hooks/useTotem";
 import { TicketTypesTab } from "@/components/autoatendimento/TicketTypesTab";
 import { DevicesTab } from "@/components/autoatendimento/DevicesTab";
 import { UnitsManagerDrawer } from "@/components/autoatendimento/UnitsManagerDrawer";
@@ -27,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 export default function AdminAutoatendimento() {
   const navigate = useNavigate();
   const { data: units } = useTotemUnits();
+  const { data: institution } = useInstitutionSettings();
   const [selectedUnitId, setSelectedUnitId] = useState<string>("");
   const deleteUnit = useDeleteTotemUnit();
 
@@ -322,7 +323,7 @@ export default function AdminAutoatendimento() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
@@ -382,17 +383,19 @@ export default function AdminAutoatendimento() {
           <Card><CardContent className="py-12 text-center text-muted-foreground">Selecione ou cadastre uma unidade para configurar.</CardContent></Card>
         ) : (
         <Tabs defaultValue="branding" className="space-y-6">
-          <TabsList className="grid grid-cols-9 w-full">
-            <TabsTrigger value="branding" className="gap-1"><Palette className="w-4 h-4" /> Aparência do Totem</TabsTrigger>
-            <TabsTrigger value="privacy" className="gap-1"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
-            <TabsTrigger value="tv" className="gap-1"><Tv className="w-4 h-4" /> Painel TV</TabsTrigger>
-            <TabsTrigger value="voice" className="gap-1"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
-            <TabsTrigger value="ads" className="gap-1"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
-            <TabsTrigger value="totem" className="gap-1"><Monitor className="w-4 h-4" /> Totem</TabsTrigger>
-            <TabsTrigger value="print" className="gap-1"><Printer className="w-4 h-4" /> Impressão</TabsTrigger>
-            <TabsTrigger value="ticket_types" className="gap-1"><Tag className="w-4 h-4" /> Senhas</TabsTrigger>
-            <TabsTrigger value="devices" className="gap-1"><Monitor className="w-4 h-4" /> Totens</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-1 px-1 pb-1">
+            <TabsList className="inline-flex w-max gap-1 h-auto p-1">
+              <TabsTrigger value="branding" className="gap-1.5 whitespace-nowrap px-3"><Palette className="w-4 h-4" /> Aparência do Totem</TabsTrigger>
+              <TabsTrigger value="ticket_types" className="gap-1.5 whitespace-nowrap px-3"><Tag className="w-4 h-4" /> Senhas</TabsTrigger>
+              <TabsTrigger value="privacy" className="gap-1.5 whitespace-nowrap px-3"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
+              <TabsTrigger value="tv" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Painel TV</TabsTrigger>
+              <TabsTrigger value="voice" className="gap-1.5 whitespace-nowrap px-3"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
+              <TabsTrigger value="ads" className="gap-1.5 whitespace-nowrap px-3"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
+              <TabsTrigger value="totem" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totem</TabsTrigger>
+              <TabsTrigger value="print" className="gap-1.5 whitespace-nowrap px-3"><Printer className="w-4 h-4" /> Impressão</TabsTrigger>
+              <TabsTrigger value="devices" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totens Físicos</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="ticket_types" className="space-y-6">
             <TicketTypesTab unitId={selectedUnitId} />
@@ -413,8 +416,12 @@ export default function AdminAutoatendimento() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <Label>Nome da Instituição</Label>
-                      <Input value={unitName} onChange={e => setUnitName(e.target.value)} placeholder="Nome da unidade" />
+                      <Label>Nome exibido no totem (setor)</Label>
+                      <Input value={unitName} onChange={e => setUnitName(e.target.value)} placeholder="Ex.: Centro Cirúrgico, Pronto-Socorro…" />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Aparece como contexto operacional no totem, portal e painel.
+                        A marca da instituição vem do card "Identidade da Instituição" (acima).
+                      </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -435,7 +442,10 @@ export default function AdminAutoatendimento() {
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <Label>Logo da Unidade</Label>
+                      <Label>Logo desta unidade (opcional)</Label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Se não enviar, o totem usa a logo institucional global.
+                      </p>
                       <div className="flex items-center gap-4 mt-1">
                         {config?.logo_url ? (
                           <img src={config.logo_url} alt="Logo" className="w-16 h-16 rounded-xl object-cover border" />
@@ -445,7 +455,7 @@ export default function AdminAutoatendimento() {
                           </div>
                         )}
                         <Button variant="outline" onClick={() => logoFileRef.current?.click()} disabled={uploading}>
-                          <Upload className="w-4 h-4 mr-2" /> {config?.logo_url ? "Trocar Logo" : "Enviar Logo"}
+                          <Upload className="w-4 h-4 mr-2" /> {config?.logo_url ? "Trocar logo da unidade" : "Enviar logo da unidade"}
                         </Button>
                         {config?.logo_url && config?.id && (
                           <Button
@@ -453,8 +463,9 @@ export default function AdminAutoatendimento() {
                             size="sm"
                             onClick={() => updateConfig.mutate({ id: config.id, logo_url: null } as any)}
                             disabled={uploading}
+                            title="Voltar a usar a logo institucional"
                           >
-                            <Trash2 className="w-4 h-4 mr-1" /> Remover
+                            <Trash2 className="w-4 h-4 mr-1" /> Usar institucional
                           </Button>
                         )}
                         <input ref={logoFileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
@@ -489,11 +500,16 @@ export default function AdminAutoatendimento() {
                   </div>
                 </div>
                 <div>
-                  <Label className="mb-2 block">Pré-visualização</Label>
+                  <Label className="mb-2 block">Pré-visualização do totem</Label>
                   <div className="rounded-xl overflow-hidden border" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}>
-                    <div className="h-14 flex items-center px-6 gap-3 bg-black/20">
-                      {config?.logo_url && <img src={config.logo_url} alt="Logo" className="w-8 h-8 rounded-lg object-cover" />}
-                      <span className="text-white font-bold text-lg">{unitName || "Nome da Unidade"}</span>
+                    <div className="h-16 flex items-center px-6 gap-3 bg-black/20">
+                      {(config?.logo_url || institution?.logo_url) && (
+                        <img src={config?.logo_url || institution?.logo_url || ""} alt="Logo" className="w-9 h-9 rounded-lg object-cover" />
+                      )}
+                      <div className="leading-tight">
+                        <div className="text-white font-bold text-base">{institution?.name || "Instituição"}</div>
+                        <div className="text-white/80 text-xs">Autoatendimento — {unitName || "Setor"}</div>
+                      </div>
                     </div>
                     <div className="p-8 text-center">
                       <p className="text-white/60 text-sm">SENHA CHAMADA</p>
