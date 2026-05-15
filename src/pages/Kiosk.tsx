@@ -28,7 +28,7 @@ const TIMEOUT_MULTIPLIER: Record<KioskFlow, number> = {
 };
 
 export default function Kiosk() {
-  const { deviceId, setDeviceId, device, unit, ticketTypes, isLoading } = useActiveTotemContext();
+  const { deviceId, setDeviceId, device, unit, ticketTypes, ticketTypePriorities, isLoading, deviceInactive, unitInactive } = useActiveTotemContext();
   const [flow, setFlow] = useState<KioskFlow>("home");
   const [resultData, setResultData] = useState<KioskResultData | null>(null);
 
@@ -74,6 +74,28 @@ export default function Kiosk() {
     );
   }
 
+  // Block when device or unit are inactive
+  if (deviceInactive || unitInactive) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-white p-6 text-center" style={{ background: "linear-gradient(135deg,#1e5a8a,#0f3460)" }}>
+        <div className="bg-black/30 backdrop-blur rounded-2xl p-8 max-w-md space-y-4">
+          <h2 className="text-2xl font-bold">Totem indisponível</h2>
+          <p className="text-white/80 text-sm">
+            {deviceInactive
+              ? "Este totem está marcado como inativo nas configurações."
+              : "A unidade vinculada a este totem está inativa."}
+          </p>
+          <button
+            onClick={() => { setDeviceId(null); window.location.reload(); }}
+            className="bg-white text-black rounded-lg px-4 py-2 text-sm font-semibold hover:bg-white/90"
+          >
+            Selecionar outro totem
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading || !unit) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#1e5a8a,#0f3460)" }}>
@@ -95,7 +117,7 @@ export default function Kiosk() {
     <div className="min-h-screen flex items-center justify-center p-4 relative" style={bgStyle}>
       <div className="w-full max-w-lg">
         {flow === "home" && <KioskHome onSelect={setFlow} unit={unit} />}
-        {flow === "ticket" && <KioskTicket onBack={goHome} onResult={showResult} config={legacyConfig} ticketTypes={ticketTypes} unitId={unit.id} deviceId={deviceId} />}
+        {flow === "ticket" && <KioskTicket onBack={goHome} onResult={showResult} config={legacyConfig} ticketTypes={ticketTypes} typePriorities={ticketTypePriorities} unitId={unit.id} deviceId={deviceId} />}
         {flow === "checkin" && <KioskCheckin onBack={goHome} onResult={showResult} />}
         {flow === "result" && resultData && <KioskResult data={resultData} onBack={goHome} config={legacyConfig} />}
       </div>

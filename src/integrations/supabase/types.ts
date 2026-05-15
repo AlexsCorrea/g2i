@@ -8355,6 +8355,122 @@ export type Database = {
           },
         ]
       }
+      totem_ticket_types_global: {
+        Row: {
+          active: boolean
+          code: string
+          color: string | null
+          created_at: string
+          default_display_order: number
+          id: string
+          label: string
+          prefix: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          color?: string | null
+          created_at?: string
+          default_display_order?: number
+          id?: string
+          label: string
+          prefix?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          color?: string | null
+          created_at?: string
+          default_display_order?: number
+          id?: string
+          label?: string
+          prefix?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      totem_unit_ticket_type_priorities: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          priority_code: string
+          unit_ticket_type_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          priority_code: string
+          unit_ticket_type_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          priority_code?: string
+          unit_ticket_type_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "totem_unit_ticket_type_priorities_unit_ticket_type_id_fkey"
+            columns: ["unit_ticket_type_id"]
+            isOneToOne: false
+            referencedRelation: "totem_unit_ticket_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      totem_unit_ticket_types: {
+        Row: {
+          color_override: string | null
+          created_at: string
+          display_order: number
+          enabled: boolean
+          id: string
+          ticket_type_global_id: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          color_override?: string | null
+          created_at?: string
+          display_order?: number
+          enabled?: boolean
+          id?: string
+          ticket_type_global_id: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          color_override?: string | null
+          created_at?: string
+          display_order?: number
+          enabled?: boolean
+          id?: string
+          ticket_type_global_id?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "totem_unit_ticket_types_ticket_type_global_id_fkey"
+            columns: ["ticket_type_global_id"]
+            isOneToOne: false
+            referencedRelation: "totem_ticket_types_global"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "totem_unit_ticket_types_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "totem_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       totem_units: {
         Row: {
           active: boolean
