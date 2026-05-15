@@ -441,7 +441,10 @@ export default function AdminAutoatendimento() {
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <Label>Logo da Unidade</Label>
+                      <Label>Logo desta unidade (opcional)</Label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Se não enviar, o totem usa a logo institucional global.
+                      </p>
                       <div className="flex items-center gap-4 mt-1">
                         {config?.logo_url ? (
                           <img src={config.logo_url} alt="Logo" className="w-16 h-16 rounded-xl object-cover border" />
@@ -451,7 +454,7 @@ export default function AdminAutoatendimento() {
                           </div>
                         )}
                         <Button variant="outline" onClick={() => logoFileRef.current?.click()} disabled={uploading}>
-                          <Upload className="w-4 h-4 mr-2" /> {config?.logo_url ? "Trocar Logo" : "Enviar Logo"}
+                          <Upload className="w-4 h-4 mr-2" /> {config?.logo_url ? "Trocar logo da unidade" : "Enviar logo da unidade"}
                         </Button>
                         {config?.logo_url && config?.id && (
                           <Button
@@ -459,8 +462,9 @@ export default function AdminAutoatendimento() {
                             size="sm"
                             onClick={() => updateConfig.mutate({ id: config.id, logo_url: null } as any)}
                             disabled={uploading}
+                            title="Voltar a usar a logo institucional"
                           >
-                            <Trash2 className="w-4 h-4 mr-1" /> Remover
+                            <Trash2 className="w-4 h-4 mr-1" /> Usar institucional
                           </Button>
                         )}
                         <input ref={logoFileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
