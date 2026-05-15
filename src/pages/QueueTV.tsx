@@ -308,8 +308,11 @@ export default function QueueTV() {
         {/* Top bar with branding */}
         <div className="h-16 flex items-center justify-between px-8" style={{ background: primaryColor }}>
           <div className="flex items-center gap-3">
-            {config?.logo_url && <img src={config.logo_url} alt="Logo" className="h-10 w-10 rounded-lg object-cover" />}
-            <span className="text-white text-xl font-bold">{unitName}</span>
+            {brandLogo && <img src={brandLogo} alt="Logo" className="h-10 w-10 rounded-lg object-cover" />}
+            <div className="flex flex-col leading-tight">
+              <span className="text-white text-xl font-bold">{institutionName}</span>
+              {sectorName && <span className="text-white/70 text-xs">Setor: {sectorName}</span>}
+            </div>
           </div>
           {showClock && <span className="text-white/80 text-lg font-mono">{timeStr}</span>}
         </div>
