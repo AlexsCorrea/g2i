@@ -363,8 +363,11 @@ export default function QueueTV() {
       {/* Top bar */}
       <div className="h-20 flex items-center justify-between px-10 bg-black/20">
         <div className="flex items-center gap-4">
-          {config?.logo_url && <img src={config.logo_url} alt="Logo" className="h-12 w-12 rounded-xl object-cover" />}
-          <span className="text-white text-2xl font-bold">{unitName}</span>
+          {brandLogo && <img src={brandLogo} alt="Logo" className="h-12 w-12 rounded-xl object-cover" />}
+          <div className="flex flex-col leading-tight">
+            <span className="text-white text-2xl font-bold">{institutionName}</span>
+            {sectorName && <span className="text-white/60 text-sm">Setor: {sectorName}</span>}
+          </div>
         </div>
         <div className="flex items-center gap-6">
           {callQueue.length > 0 && (
