@@ -7,6 +7,7 @@ import { TicketTypesTab } from "@/components/autoatendimento/TicketTypesTab";
 import { DevicesTab } from "@/components/autoatendimento/DevicesTab";
 import { UnitsManagerDrawer } from "@/components/autoatendimento/UnitsManagerDrawer";
 import { InstitutionSettingsCard } from "@/components/autoatendimento/InstitutionSettingsCard";
+import { TvPanelsCard } from "@/components/autoatendimento/TvPanelsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -349,6 +350,9 @@ export default function AdminAutoatendimento() {
 
         {/* Institution settings (global) */}
         <InstitutionSettingsCard />
+
+        {/* TV panels (global, independent of units) */}
+        <TvPanelsCard />
 
         {/* Unit selector */}
         <Card>
