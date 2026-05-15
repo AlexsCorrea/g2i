@@ -367,6 +367,190 @@ export function useSetTicketTypePriorities() {
   });
 }
 
+/* ===== GLOBAL ticket types catalog ===== */
+export interface GlobalTicketType {
+  id: string;
+  code: string;
+  label: string;
+  prefix: string;
+  color: string | null;
+  default_display_order: number;
+  active: boolean;
+}
+
+export function useGlobalTicketTypes() {
+  return useQuery({
+    queryKey: ["totem_ticket_types_global"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("totem_ticket_types_global")
+        .select("*")
+        .order("default_display_order")
+        .order("label");
+      if (error) throw error;
+      return data as GlobalTicketType[];
+    },
+    staleTime: 30_000,
+  });
+}
+
+function normalizeCode(s: string) {
+  return s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
+export function useUpsertGlobalTicketType() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: Partial<GlobalTicketType> & { label: string; code?: string }) => {
+      const { id, ...rest } = payload;
+      const code = normalizeCode(rest.code || rest.label);
+      if (id) {
+        const { data, error } = await (supabase as any)
+          .from("totem_ticket_types_global")
+          .update({ ...rest, code })
+          .eq("id", id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data as GlobalTicketType;
+      } else {
+        const { data, error } = await (supabase as any)
+          .from("totem_ticket_types_global")
+          .insert({ ...rest, code })
+          .select()
+          .single();
+        if (error) {
+          if (String(error.message || "").toLowerCase().includes("duplicate")) {
+            throw new Error(`Já existe um tipo com o código "${code}". Use outro nome.`);
+          }
+          throw error;
+        }
+        return data as GlobalTicketType;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["totem_ticket_types_global"] });
+      qc.invalidateQueries({ queryKey: ["totem_unit_ticket_types"] });
+      toast.success("Tipo global salvo");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+export function useDeleteGlobalTicketType() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from("totem_ticket_types_global").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["totem_ticket_types_global"] });
+      qc.invalidateQueries({ queryKey: ["totem_unit_ticket_types"] });
+      toast.success("Tipo global removido");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+/* ===== Unit ↔ Global Ticket Type link ===== */
+export interface UnitTicketTypeRow {
+  id: string;
+  unit_id: string;
+  ticket_type_global_id: string;
+  enabled: boolean;
+  display_order: number;
+  color_override: string | null;
+  global: GlobalTicketType;
+  priority_codes: string[];
+}
+
+export function useUnitTicketTypes(unitId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["totem_unit_ticket_types", unitId],
+    queryFn: async () => {
+      if (!unitId) return [];
+      const { data, error } = await (supabase as any)
+        .from("totem_unit_ticket_types")
+        .select("*, global:totem_ticket_types_global(*), totem_unit_ticket_type_priorities(priority_code, enabled)")
+        .eq("unit_id", unitId)
+        .order("display_order");
+      if (error) throw error;
+      return (data as any[]).map((r) => ({
+        id: r.id,
+        unit_id: r.unit_id,
+        ticket_type_global_id: r.ticket_type_global_id,
+        enabled: r.enabled,
+        display_order: r.display_order,
+        color_override: r.color_override,
+        global: r.global,
+        priority_codes: (r.totem_unit_ticket_type_priorities || [])
+          .filter((p: any) => p.enabled)
+          .map((p: any) => p.priority_code),
+      })) as UnitTicketTypeRow[];
+    },
+    enabled: !!unitId,
+    staleTime: 30_000,
+  });
+}
+
+export interface UnitTicketTypeDraft {
+  ticket_type_global_id: string;
+  enabled: boolean;
+  display_order: number;
+  color_override: string | null;
+  priority_codes: string[];
+  /** existing link id (when known) */
+  id?: string;
+}
+
+export function useSaveUnitTicketTypesBatch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { unit_id: string; items: UnitTicketTypeDraft[] }) => {
+      const { unit_id, items } = params;
+      // upsert links
+      const linkPayload = items.map((it) => ({
+        ...(it.id ? { id: it.id } : {}),
+        unit_id,
+        ticket_type_global_id: it.ticket_type_global_id,
+        enabled: it.enabled,
+        display_order: it.display_order,
+        color_override: it.color_override,
+      }));
+      const { data: upserted, error: upsertErr } = await (supabase as any)
+        .from("totem_unit_ticket_types")
+        .upsert(linkPayload, { onConflict: "unit_id,ticket_type_global_id" })
+        .select("id, ticket_type_global_id");
+      if (upsertErr) throw upsertErr;
+      const idByGlobal = new Map<string, string>();
+      (upserted as any[]).forEach((r) => idByGlobal.set(r.ticket_type_global_id, r.id));
+
+      // For each item, replace its priorities atomically (delete + insert)
+      for (const it of items) {
+        const linkId = idByGlobal.get(it.ticket_type_global_id) ?? it.id;
+        if (!linkId) continue;
+        await (supabase as any).from("totem_unit_ticket_type_priorities").delete().eq("unit_ticket_type_id", linkId);
+        if (it.priority_codes.length > 0) {
+          const rows = it.priority_codes.map((c) => ({
+            unit_ticket_type_id: linkId,
+            priority_code: c,
+            enabled: true,
+          }));
+          const { error: pErr } = await (supabase as any).from("totem_unit_ticket_type_priorities").insert(rows);
+          if (pErr) throw pErr;
+        }
+      }
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["totem_unit_ticket_types", vars.unit_id] });
+      qc.invalidateQueries({ queryKey: ["totem_unit_ticket_types"] });
+      toast.success("Alterações salvas");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
 /* ===== Institution settings (singleton) ===== */
 export interface InstitutionSettings {
   id: string;
