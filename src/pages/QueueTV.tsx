@@ -44,7 +44,11 @@ export default function QueueTV() {
   // Config values
   const primaryColor = config?.primary_color || "#1e5a8a";
   const secondaryColor = config?.secondary_color || "#0f3460";
-  const unitName = config?.unit_name || "OftalmoCenter";
+  const sectorName = config?.unit_name || "";
+  const institutionName = institution?.name || "OftalmoCenter";
+  const brandLogo = config?.logo_url || institution?.logo_url || null;
+  const footerLine = [institutionName, sectorName, "Painel de Chamadas"].filter(Boolean).join(" • ");
+  const unitName = sectorName; // legacy var name preserved for downstream usages
   const privacyMode = config?.privacy_mode || "senha_iniciais";
   const callDisplaySec = config?.call_display_seconds || 15;
   const adsEnabled = config?.ads_enabled && ads && ads.length > 0;
