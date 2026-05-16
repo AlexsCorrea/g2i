@@ -804,50 +804,57 @@ export default function AdminAutoatendimento() {
             <Card>
               <CardHeader>
                 <CardTitle>Configurações do Totem</CardTitle>
-                <CardDescription>Parâmetros de funcionamento do autoatendimento e check-in</CardDescription>
+                <CardDescription>Comportamento do autoatendimento desta unidade.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Tela Inicial</h3>
-                    <ToggleRow label="Retirar Senha" desc="Botão para emissão de nova senha no totem" checked={totemRetirarSenha} onChange={setTotemRetirarSenha} />
-                    <ToggleRow label="Fazer Check-in" desc="Botão para check-in de consulta agendada" checked={totemCheckin} onChange={setTotemCheckin} />
+                    <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Tela inicial</h3>
+                    <ToggleRow label="Mostrar botão Retirar Senha" desc="Permite emissão de nova senha no totem" checked={totemRetirarSenha} onChange={setTotemRetirarSenha} />
+                    <ToggleRow label="Mostrar botão Fazer Check-in" desc="Permite check-in de consulta agendada (CPF + Data de Nascimento)" checked={totemCheckin} onChange={setTotemCheckin} />
                     <div>
-                      <Label>Timeout de inatividade (segundos)</Label>
+                      <Label>Timeout da tela inicial (segundos)</Label>
                       <div className="flex items-center gap-4 mt-2">
                         <Slider value={[totemTimeout]} onValueChange={v => setTotemTimeout(v[0])} min={5} max={180} step={5} className="flex-1" />
                         <span className="text-sm font-mono w-12 text-right">{totemTimeout}s</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">O totem retorna à tela inicial após esse tempo de inatividade</p>
+                      <p className="text-xs text-muted-foreground mt-1">Retorna à tela inicial após esse tempo de inatividade.</p>
+                    </div>
+                    <div>
+                      <Label>Timeout da tela de resultado (segundos)</Label>
+                      <div className="flex items-center gap-4 mt-2">
+                        <Slider value={[resultCountdown]} onValueChange={v => setResultCountdown(v[0])} min={10} max={120} step={5} className="flex-1" />
+                        <span className="text-sm font-mono w-12 text-right">{resultCountdown}s</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">Após emitir a senha ou concluir o check-in, a tela retorna ao início.</p>
                     </div>
                   </div>
+
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Tipos de Senha</h3>
-                    <div className="p-4 rounded-xl border">
-                      <p className="text-sm text-muted-foreground mb-3">Senhas disponíveis para emissão no totem</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge>Normal</Badge>
-                        <Badge>Preferencial</Badge>
-                        <Badge>60+</Badge>
-                        <Badge>80+</Badge>
-                        <Badge>Consulta</Badge>
-                        <Badge>Retorno Pós-op</Badge>
-                        <Badge>Exames</Badge>
-                        <Badge>Financeiro</Badge>
-                      </div>
+                    <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Sobre o totem</h3>
+                    <div className="p-4 rounded-lg border bg-muted/20 space-y-2">
+                      <p className="text-sm font-medium flex items-center gap-2"><Info className="w-4 h-4 text-muted-foreground" /> Tipos de senha</p>
+                      <p className="text-xs text-muted-foreground">
+                        Os tipos de senha exibidos no totem são definidos na aba <strong>Senhas</strong> (tipos habilitados nesta unidade).
+                      </p>
                     </div>
-                    <div className="p-4 rounded-xl border">
-                      <p className="font-medium mb-2">Check-in</p>
-                      <p className="text-sm text-muted-foreground mb-2">Identificação por CPF + Data de Nascimento</p>
-                      <ul className="space-y-1 text-sm text-muted-foreground">
-                        <li>• Busca agendamentos do dia</li>
-                        <li>• Confirma presença automaticamente</li>
-                        <li>• Gera senha vinculada à consulta</li>
-                      </ul>
+                    <div className="p-4 rounded-lg border bg-muted/20 space-y-2">
+                      <p className="text-sm font-medium flex items-center gap-2"><Info className="w-4 h-4 text-muted-foreground" /> Check-in</p>
+                      <p className="text-xs text-muted-foreground">
+                        Identificação por CPF + Data de Nascimento. Busca agendamentos do dia, confirma presença e gera senha vinculada.
+                      </p>
                     </div>
-                    <div className="p-4 rounded-xl border">
-                      <p className="font-medium mb-2">QR Code</p>
-                      <p className="text-sm text-muted-foreground">Na tela de resultado, QR Code direciona ao portal mobile para acompanhar a fila</p>
+                    <div className="p-4 rounded-lg border bg-muted/20 space-y-2">
+                      <p className="text-sm font-medium flex items-center gap-2"><Info className="w-4 h-4 text-muted-foreground" /> QR Code / portal mobile</p>
+                      <p className="text-xs text-muted-foreground">
+                        Na tela de resultado, um QR Code direciona o paciente ao portal mobile para acompanhar a fila.
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg border border-dashed bg-muted/10 space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">Em breve</p>
+                      <p className="text-xs text-muted-foreground">
+                        Mensagens personalizadas da tela inicial e tela de sucesso, alternar QR Code de senha virtual e textos do totem por unidade.
+                      </p>
                     </div>
                   </div>
                 </div>
