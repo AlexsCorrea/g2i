@@ -44,6 +44,7 @@ export function GlobalCatalogDialog({ trigger, open, onOpenChange }: Props) {
   const originalRef = useRef<Record<string, string>>({});
   const [newDraft, setNewDraft] = useState({ label: "", prefix: "N", color: "#1e5a8a" });
   const [confirmDelete, setConfirmDelete] = useState<EditableRow | null>(null);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   // Sync rows from server every time the catalog loads / dialog opens
   useEffect(() => {
@@ -99,126 +100,154 @@ export function GlobalCatalogDialog({ trigger, open, onOpenChange }: Props) {
     setNewDraft({ label: "", prefix: "N", color: "#1e5a8a" });
   };
 
+  const requestClose = () => {
+    if (dirtyCount > 0) setConfirmDiscard(true);
+    else setOpen(false);
+  };
+
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={setOpen}>
+      <Dialog open={isOpen} onOpenChange={(o) => { if (!o) requestClose(); else setOpen(true); }}>
         {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent
+          className="max-w-3xl p-0 gap-0 max-h-[85vh] flex flex-col"
+          onEscapeKeyDown={(e) => { if (dirtyCount > 0) { e.preventDefault(); setConfirmDiscard(true); } }}
+          onPointerDownOutside={(e) => { if (dirtyCount > 0) { e.preventDefault(); setConfirmDiscard(true); } }}
+        >
+          <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
             <DialogTitle>Catálogo global de tipos de senha</DialogTitle>
             <DialogDescription>
               Cadastro global. Cada unidade escolhe quais tipos habilitar e quais prioridades aceita.
             </DialogDescription>
           </DialogHeader>
 
-          {dirtyCount > 0 && (
-            <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800 text-sm">
-              <AlertCircle className="w-4 h-4" />
-              {dirtyCount} alteração(ões) não salva(s). Clique em <strong>Salvar alterações do catálogo</strong> para aplicar.
-            </div>
-          )}
-
-          <div className="space-y-2">
-            {rows.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">Nenhum tipo cadastrado.</p>
+          {/* Corpo rolável */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            {dirtyCount > 0 && (
+              <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800 text-sm">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                {dirtyCount} alteração(ões) não salva(s). Clique em <strong>Salvar alterações do catálogo</strong> para aplicar.
+              </div>
             )}
-            <div className="grid grid-cols-12 gap-2 px-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-              <div className="col-span-4">Nome</div>
-              <div className="col-span-3">Código</div>
-              <div className="col-span-1">Sigla</div>
-              <div className="col-span-1">Cor</div>
-              <div className="col-span-2">Status</div>
-              <div className="col-span-1 text-right">Ações</div>
-            </div>
-            {rows.map(r => {
-              const dirty = originalRef.current[r.id] !== rowKey(r);
-              return (
-                <div
-                  key={r.id}
-                  className={`grid grid-cols-12 gap-2 items-center border rounded p-2 bg-card ${dirty ? "ring-1 ring-amber-300" : ""}`}
-                >
-                  <div className="col-span-4">
-                    <Input value={r.label} onChange={e => updateRow(r.id, { label: e.target.value })} className="h-8" />
-                  </div>
-                  <div className="col-span-3 font-mono text-xs text-muted-foreground truncate">{r.code}</div>
-                  <div className="col-span-1">
-                    <Input
-                      value={r.prefix}
-                      onChange={e => updateRow(r.id, { prefix: e.target.value.toUpperCase().slice(0, 2) })}
-                      className="h-8"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <Input
-                      type="color"
-                      value={r.color || "#1e5a8a"}
-                      onChange={e => updateRow(r.id, { color: e.target.value })}
-                      className="h-8 p-0.5"
-                    />
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2">
-                    <Switch checked={r.active} onCheckedChange={a => updateRow(r.id, { active: a })} />
-                    <span className="text-xs">{r.active ? "Ativo" : "Inativo"}</span>
-                    {dirty && <Badge variant="outline" className="text-amber-700 border-amber-400 text-[10px]">alterado</Badge>}
-                  </div>
-                  <div className="col-span-1 flex gap-1 justify-end">
-                    {dirty && (
-                      <Button size="sm" variant="ghost" className="h-8 px-2 text-xs"
-                        onClick={() => resetRow(r.id)} title="Desfazer">
-                        Desfazer
+
+            <div className="space-y-2">
+              {rows.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhum tipo cadastrado.</p>
+              )}
+              <div className="grid grid-cols-12 gap-2 px-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+                <div className="col-span-4">Nome</div>
+                <div className="col-span-2">Código</div>
+                <div className="col-span-1">Sigla</div>
+                <div className="col-span-1">Cor</div>
+                <div className="col-span-3">Status</div>
+                <div className="col-span-1 text-right">Ações</div>
+              </div>
+              {rows.map(r => {
+                const dirty = originalRef.current[r.id] !== rowKey(r);
+                return (
+                  <div
+                    key={r.id}
+                    className={`grid grid-cols-12 gap-2 items-center border rounded p-2 bg-card transition-colors ${
+                      dirty ? "border-amber-400 bg-amber-50/40" : ""
+                    }`}
+                  >
+                    <div className="col-span-4">
+                      <Input value={r.label} onChange={e => updateRow(r.id, { label: e.target.value })} className="h-8" />
+                    </div>
+                    <div className="col-span-2 font-mono text-xs text-muted-foreground truncate" title={r.code}>{r.code}</div>
+                    <div className="col-span-1">
+                      <Input
+                        value={r.prefix}
+                        onChange={e => updateRow(r.id, { prefix: e.target.value.toUpperCase().slice(0, 2) })}
+                        className="h-8 text-center"
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <Input
+                        type="color"
+                        value={r.color || "#1e5a8a"}
+                        onChange={e => updateRow(r.id, { color: e.target.value })}
+                        className="h-8 p-0.5 w-full"
+                      />
+                    </div>
+                    <div className="col-span-3 flex items-center gap-2 min-w-0">
+                      <Switch checked={r.active} onCheckedChange={a => updateRow(r.id, { active: a })} />
+                      <span className="text-xs text-muted-foreground">{r.active ? "Ativo" : "Inativo"}</span>
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0"
+                        onClick={() => setConfirmDelete(r)} title="Remover">
+                        <Trash2 className="w-4 h-4" />
                       </Button>
-                    )}
-                    <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(r)} title="Remover">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="border-t pt-3">
-            <p className="text-sm font-semibold mb-2">Novo tipo</p>
-            <div className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-6">
-                <Label className="text-xs">Nome</Label>
-                <Input
-                  value={newDraft.label}
-                  onChange={e => setNewDraft({ ...newDraft, label: e.target.value })}
-                  placeholder="Ex.: Consulta, Retorno, Exames…"
-                />
-              </div>
-              <div className="col-span-2">
-                <Label className="text-xs">Sigla</Label>
-                <Input
-                  value={newDraft.prefix}
-                  onChange={e => setNewDraft({ ...newDraft, prefix: e.target.value.toUpperCase().slice(0, 2) })}
-                />
-              </div>
-              <div className="col-span-3">
-                <Label className="text-xs">Cor</Label>
-                <Input type="color" value={newDraft.color}
-                  onChange={e => setNewDraft({ ...newDraft, color: e.target.value })} />
-              </div>
-              <div className="col-span-1">
-                <Button onClick={handleAddNew} className="w-full" disabled={upsert.isPending || !newDraft.label.trim()}>
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+                );
+              })}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              O código é gerado automaticamente a partir do nome (único e normalizado).
-            </p>
+
+            <div className="border-t pt-3">
+              <p className="text-sm font-semibold mb-2">Novo tipo</p>
+              <div className="grid grid-cols-12 gap-2 items-end">
+                <div className="col-span-6">
+                  <Label className="text-xs">Nome</Label>
+                  <Input
+                    value={newDraft.label}
+                    onChange={e => setNewDraft({ ...newDraft, label: e.target.value })}
+                    placeholder="Ex.: Consulta, Retorno, Exames…"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-xs">Sigla</Label>
+                  <Input
+                    value={newDraft.prefix}
+                    onChange={e => setNewDraft({ ...newDraft, prefix: e.target.value.toUpperCase().slice(0, 2) })}
+                  />
+                </div>
+                <div className="col-span-3">
+                  <Label className="text-xs">Cor</Label>
+                  <Input type="color" value={newDraft.color}
+                    onChange={e => setNewDraft({ ...newDraft, color: e.target.value })} />
+                </div>
+                <div className="col-span-1">
+                  <Button onClick={handleAddNew} className="w-full" disabled={upsert.isPending || !newDraft.label.trim()}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                O código é gerado automaticamente a partir do nome (único e normalizado).
+              </p>
+            </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Fechar</Button>
+          {/* Rodapé fixo */}
+          <DialogFooter className="px-6 py-4 border-t shrink-0 bg-background">
+            <Button variant="outline" onClick={requestClose}>Cancelar</Button>
             <Button onClick={handleSaveAll} disabled={dirtyCount === 0 || upsert.isPending}>
               <Save className="w-4 h-4 mr-1" /> Salvar alterações do catálogo
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Existem {dirtyCount} alteração(ões) não salva(s) no catálogo. Se você sair agora, elas serão perdidas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { setConfirmDiscard(false); setOpen(false); }}
+            >
+              Descartar alterações
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
         <AlertDialogContent>
