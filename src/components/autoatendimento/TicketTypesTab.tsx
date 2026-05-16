@@ -16,7 +16,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, Trash2, Save, AlertCircle, ChevronDown, Settings2 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import { Plus, Trash2, Save, AlertCircle, ChevronDown, Settings2, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 type Draft = UnitTicketTypeDraft;
@@ -120,82 +123,88 @@ export function TicketTypesTab({ unitId }: { unitId: string }) {
     setDraftG({ label: "", prefix: "N", color: "#1e5a8a" });
   };
 
+  const [catalogOpen, setCatalogOpen] = useState(false);
+
   return (
-    <div className="space-y-6">
-      {/* ===== Catálogo global ===== */}
+    <div className="space-y-4">
+      {/* ===== Habilitação por unidade (área principal) ===== */}
       <Card>
-        <CardHeader>
-          <CardTitle>Catálogo de Tipos de Senha</CardTitle>
-          <CardDescription>
-            Cadastre aqui os tipos de senha reutilizáveis em todas as unidades. Cada unidade decide depois quais
-            tipos habilitar e quais prioridades aceita.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
-            {(globals ?? []).map((g) => (
-              <GlobalRow
-                key={g.id}
-                item={g}
-                onSave={(p) => upsertGlobal.mutate({ ...p, id: g.id } as any)}
-                onDelete={() => removeGlobal.mutate(g.id)}
-              />
-            ))}
-            {(globals?.length ?? 0) === 0 && (
-              <p className="text-sm text-muted-foreground">Nenhum tipo global cadastrado.</p>
-            )}
-          </div>
-
-          <div className="border-t pt-3">
-            <p className="text-sm font-semibold mb-2">Novo tipo</p>
-            <div className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-6">
-                <Label className="text-xs">Nome</Label>
-                <Input
-                  value={draftG.label}
-                  onChange={(e) => setDraftG({ ...draftG, label: e.target.value })}
-                  placeholder="Ex.: Consulta, Retorno, Exames…"
-                />
-              </div>
-              <div className="col-span-2">
-                <Label className="text-xs">Sigla</Label>
-                <Input
-                  value={draftG.prefix}
-                  onChange={(e) => setDraftG({ ...draftG, prefix: e.target.value.toUpperCase().slice(0, 2) })}
-                />
-              </div>
-              <div className="col-span-3">
-                <Label className="text-xs">Cor</Label>
-                <Input type="color" value={draftG.color} onChange={(e) => setDraftG({ ...draftG, color: e.target.value })} />
-              </div>
-              <div className="col-span-1">
-                <Button onClick={handleAddGlobal} className="w-full" disabled={upsertGlobal.isPending}>
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              O código é gerado automaticamente a partir do nome (único e normalizado). Não permite duplicidade.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ===== Habilitação por unidade ===== */}
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
           <div>
             <CardTitle>Tipos disponíveis nesta unidade</CardTitle>
             <CardDescription>
-              Escolha quais tipos do catálogo aparecem neste setor e quais prioridades cada um aceita.
+              Habilite os tipos do catálogo global que devem aparecer neste setor e ajuste as prioridades aceitas.
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
             {dirtyCount > 0 && (
               <Badge variant="outline" className="text-amber-700 border-amber-400">
                 <AlertCircle className="w-3 h-3 mr-1" /> {dirtyCount} alteração(ões) não salva(s)
               </Badge>
             )}
+            <Dialog open={catalogOpen} onOpenChange={setCatalogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <BookOpen className="w-4 h-4 mr-1" /> Gerenciar catálogo
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Catálogo global de tipos de senha</DialogTitle>
+                  <DialogDescription>
+                    Tipos reutilizáveis em todas as unidades. Cada unidade decide quais habilitar.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 pt-2">
+                  <div className="space-y-2">
+                    {(globals ?? []).map((g) => (
+                      <GlobalRow
+                        key={g.id}
+                        item={g}
+                        onSave={(p) => upsertGlobal.mutate({ ...p, id: g.id } as any)}
+                        onDelete={() => removeGlobal.mutate(g.id)}
+                      />
+                    ))}
+                    {(globals?.length ?? 0) === 0 && (
+                      <p className="text-sm text-muted-foreground">Nenhum tipo global cadastrado.</p>
+                    )}
+                  </div>
+
+                  <div className="border-t pt-3">
+                    <p className="text-sm font-semibold mb-2">Novo tipo</p>
+                    <div className="grid grid-cols-12 gap-2 items-end">
+                      <div className="col-span-6">
+                        <Label className="text-xs">Nome</Label>
+                        <Input
+                          value={draftG.label}
+                          onChange={(e) => setDraftG({ ...draftG, label: e.target.value })}
+                          placeholder="Ex.: Consulta, Retorno, Exames…"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-xs">Sigla</Label>
+                        <Input
+                          value={draftG.prefix}
+                          onChange={(e) => setDraftG({ ...draftG, prefix: e.target.value.toUpperCase().slice(0, 2) })}
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <Label className="text-xs">Cor</Label>
+                        <Input type="color" value={draftG.color} onChange={(e) => setDraftG({ ...draftG, color: e.target.value })} />
+                      </div>
+                      <div className="col-span-1">
+                        <Button onClick={handleAddGlobal} className="w-full" disabled={upsertGlobal.isPending}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      O código é gerado automaticamente a partir do nome (único e normalizado).
+                    </p>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button onClick={handleSaveAll} disabled={dirtyCount === 0 || saveBatch.isPending}>
               <Save className="w-4 h-4 mr-1" /> Salvar alterações
             </Button>
@@ -203,7 +212,9 @@ export function TicketTypesTab({ unitId }: { unitId: string }) {
         </CardHeader>
         <CardContent className="space-y-2">
           {(globals ?? []).length === 0 && (
-            <p className="text-sm text-muted-foreground">Cadastre tipos no catálogo acima para habilitá-los aqui.</p>
+            <div className="text-sm text-muted-foreground text-center py-8 border border-dashed rounded-lg">
+              Nenhum tipo no catálogo. Clique em <strong>Gerenciar catálogo</strong> para cadastrar.
+            </div>
           )}
           {(globals ?? []).map((g) => {
             const d = drafts[g.id];

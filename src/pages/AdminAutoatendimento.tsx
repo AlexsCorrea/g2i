@@ -6,7 +6,7 @@ import { useTotemUnits, useTotemUnit, useDeleteTotemUnit, useInstitutionSettings
 import { TicketTypesTab } from "@/components/autoatendimento/TicketTypesTab";
 import { DevicesTab } from "@/components/autoatendimento/DevicesTab";
 import { UnitsManagerDrawer } from "@/components/autoatendimento/UnitsManagerDrawer";
-import { InstitutionSettingsCard } from "@/components/autoatendimento/InstitutionSettingsCard";
+
 import { TvPanelsCard } from "@/components/autoatendimento/TvPanelsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,8 +21,9 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import {
   Palette, Image, Tv, Monitor, Settings2, Upload, Trash2, GripVertical, Plus, Tag,
-  ArrowLeft, Eye, Volume2, Clock, ShieldCheck, Megaphone, Play, Mic, Printer, Building2,
+  ArrowLeft, Eye, Volume2, Clock, ShieldCheck, Megaphone, Play, Mic, Printer, Building2, MapPin, Info,
 } from "lucide-react";
+import { InstitutionHeaderCompact } from "@/components/autoatendimento/InstitutionHeaderCompact";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminAutoatendimento() {
@@ -348,38 +349,46 @@ export default function AdminAutoatendimento() {
           </div>
         </div>
 
-        {/* Institution settings (global) */}
-        <InstitutionSettingsCard />
+        {/* Identidade institucional compacta */}
+        <InstitutionHeaderCompact />
 
-        {/* TV panels (global, independent of units) */}
-        <TvPanelsCard />
-
-        {/* Unit selector */}
-        <Card>
-          <CardContent className="py-4 flex items-center gap-3 flex-wrap">
-            <Building2 className="w-5 h-5 text-muted-foreground" />
-            <Label className="text-sm">Unidade de Totem (setor):</Label>
-            <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
-              <SelectTrigger className="w-72"><SelectValue placeholder="Selecione uma unidade" /></SelectTrigger>
-              <SelectContent>
-                {(units ?? []).map(u => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.name} {!u.active && "(inativa)"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <UnitsManagerDrawer
-              onUnitChanged={(id) => setSelectedUnitId(id)}
-              trigger={
-                <Button size="sm" variant="outline">
-                  <Settings2 className="w-4 h-4 mr-1" /> Gerenciar Unidades
-                </Button>
-              }
-            />
-            <span className="text-xs text-muted-foreground ml-auto">
-              {units?.length ?? 0} unidade(s) cadastrada(s)
-            </span>
+        {/* Contexto de unidade em edição */}
+        <Card className="border-primary/30 bg-primary/[0.02]">
+          <CardContent className="py-4 space-y-3">
+            <div className="flex items-start gap-3 flex-wrap">
+              <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                <MapPin className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-[220px]">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Você está configurando</p>
+                <p className="text-lg font-bold leading-tight">
+                  {config?.unit_name || (units?.find(u => u.id === selectedUnitId)?.name) || "Selecione uma unidade"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  As configurações abaixo se aplicam apenas a esta unidade/setor.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
+                  <SelectTrigger className="w-64"><SelectValue placeholder="Selecione uma unidade" /></SelectTrigger>
+                  <SelectContent>
+                    {(units ?? []).map(u => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name} {!u.active && "(inativa)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <UnitsManagerDrawer
+                  onUnitChanged={(id) => setSelectedUnitId(id)}
+                  trigger={
+                    <Button size="sm" variant="outline">
+                      <Settings2 className="w-4 h-4 mr-1" /> Gerenciar
+                    </Button>
+                  }
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -388,16 +397,17 @@ export default function AdminAutoatendimento() {
         ) : (
         <Tabs defaultValue="branding" className="space-y-6">
           <div className="overflow-x-auto -mx-1 px-1 pb-1">
-            <TabsList className="inline-flex w-max gap-1 h-auto p-1">
-              <TabsTrigger value="branding" className="gap-1.5 whitespace-nowrap px-3"><Palette className="w-4 h-4" /> Aparência do Totem</TabsTrigger>
+            <TabsList className="inline-flex w-max gap-1 h-auto p-1 flex-wrap">
+              <TabsTrigger value="branding" className="gap-1.5 whitespace-nowrap px-3"><Palette className="w-4 h-4" /> Aparência</TabsTrigger>
               <TabsTrigger value="ticket_types" className="gap-1.5 whitespace-nowrap px-3"><Tag className="w-4 h-4" /> Senhas</TabsTrigger>
-              <TabsTrigger value="privacy" className="gap-1.5 whitespace-nowrap px-3"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
-              <TabsTrigger value="tv" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Painel TV</TabsTrigger>
-              <TabsTrigger value="voice" className="gap-1.5 whitespace-nowrap px-3"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
-              <TabsTrigger value="ads" className="gap-1.5 whitespace-nowrap px-3"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
               <TabsTrigger value="totem" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totem</TabsTrigger>
               <TabsTrigger value="print" className="gap-1.5 whitespace-nowrap px-3"><Printer className="w-4 h-4" /> Impressão</TabsTrigger>
-              <TabsTrigger value="devices" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totens Físicos</TabsTrigger>
+              <TabsTrigger value="tv" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Exibição TV</TabsTrigger>
+              <TabsTrigger value="tv_panels" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Painéis TV</TabsTrigger>
+              <TabsTrigger value="voice" className="gap-1.5 whitespace-nowrap px-3"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
+              <TabsTrigger value="privacy" className="gap-1.5 whitespace-nowrap px-3"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
+              <TabsTrigger value="ads" className="gap-1.5 whitespace-nowrap px-3"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
+              <TabsTrigger value="devices" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totens</TabsTrigger>
             </TabsList>
           </div>
 
@@ -407,14 +417,17 @@ export default function AdminAutoatendimento() {
           <TabsContent value="devices" className="space-y-6">
             <DevicesTab unitId={selectedUnitId} />
           </TabsContent>
+          <TabsContent value="tv_panels" className="space-y-6">
+            <TvPanelsCard />
+          </TabsContent>
 
 
           {/* BRANDING TAB */}
           <TabsContent value="branding" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Aparência do Totem</CardTitle>
-                <CardDescription>Visual aplicado ao totem, portal mobile e painel TV desta unidade. A identidade global da clínica/hospital fica no card "Identidade da Instituição" acima.</CardDescription>
+                <CardTitle>Aparência da Unidade</CardTitle>
+                <CardDescription>Visual aplicado ao totem, portal mobile e painel TV desta unidade. A marca global da instituição fica no cabeçalho acima.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -553,7 +566,12 @@ export default function AdminAutoatendimento() {
                           <p className="font-medium">{opt.label}</p>
                           <p className="text-sm text-muted-foreground">{opt.desc}</p>
                         </div>
-                        {opt.value === "senha_iniciais" && <Badge>Recomendado</Badge>}
+                        {opt.value === "senha_iniciais" && <Badge>Recomendado para saúde</Badge>}
+                        {opt.value === "nome_completo" && (
+                          <Badge variant="outline" className="text-amber-700 border-amber-400">
+                            Menos recomendado para ambiente público
+                          </Badge>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -578,8 +596,11 @@ export default function AdminAutoatendimento() {
           <TabsContent value="tv" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Configurações do Painel TV</CardTitle>
-                <CardDescription>Comportamento da tela pública de chamadas em sala de espera</CardDescription>
+                <CardTitle>Exibição do Painel TV</CardTitle>
+                <CardDescription>
+                  Comportamento visual e sonoro do painel de chamadas desta unidade. O cadastro dos
+                  dispositivos físicos fica na aba <strong>Painéis TV</strong>.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -788,50 +809,57 @@ export default function AdminAutoatendimento() {
             <Card>
               <CardHeader>
                 <CardTitle>Configurações do Totem</CardTitle>
-                <CardDescription>Parâmetros de funcionamento do autoatendimento e check-in</CardDescription>
+                <CardDescription>Comportamento do autoatendimento desta unidade.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Tela Inicial</h3>
-                    <ToggleRow label="Retirar Senha" desc="Botão para emissão de nova senha no totem" checked={totemRetirarSenha} onChange={setTotemRetirarSenha} />
-                    <ToggleRow label="Fazer Check-in" desc="Botão para check-in de consulta agendada" checked={totemCheckin} onChange={setTotemCheckin} />
+                    <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Tela inicial</h3>
+                    <ToggleRow label="Mostrar botão Retirar Senha" desc="Permite emissão de nova senha no totem" checked={totemRetirarSenha} onChange={setTotemRetirarSenha} />
+                    <ToggleRow label="Mostrar botão Fazer Check-in" desc="Permite check-in de consulta agendada (CPF + Data de Nascimento)" checked={totemCheckin} onChange={setTotemCheckin} />
                     <div>
-                      <Label>Timeout de inatividade (segundos)</Label>
+                      <Label>Timeout da tela inicial (segundos)</Label>
                       <div className="flex items-center gap-4 mt-2">
                         <Slider value={[totemTimeout]} onValueChange={v => setTotemTimeout(v[0])} min={5} max={180} step={5} className="flex-1" />
                         <span className="text-sm font-mono w-12 text-right">{totemTimeout}s</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">O totem retorna à tela inicial após esse tempo de inatividade</p>
+                      <p className="text-xs text-muted-foreground mt-1">Retorna à tela inicial após esse tempo de inatividade.</p>
+                    </div>
+                    <div>
+                      <Label>Timeout da tela de resultado (segundos)</Label>
+                      <div className="flex items-center gap-4 mt-2">
+                        <Slider value={[resultCountdown]} onValueChange={v => setResultCountdown(v[0])} min={10} max={120} step={5} className="flex-1" />
+                        <span className="text-sm font-mono w-12 text-right">{resultCountdown}s</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">Após emitir a senha ou concluir o check-in, a tela retorna ao início.</p>
                     </div>
                   </div>
+
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Tipos de Senha</h3>
-                    <div className="p-4 rounded-xl border">
-                      <p className="text-sm text-muted-foreground mb-3">Senhas disponíveis para emissão no totem</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge>Normal</Badge>
-                        <Badge>Preferencial</Badge>
-                        <Badge>60+</Badge>
-                        <Badge>80+</Badge>
-                        <Badge>Consulta</Badge>
-                        <Badge>Retorno Pós-op</Badge>
-                        <Badge>Exames</Badge>
-                        <Badge>Financeiro</Badge>
-                      </div>
+                    <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Sobre o totem</h3>
+                    <div className="p-4 rounded-lg border bg-muted/20 space-y-2">
+                      <p className="text-sm font-medium flex items-center gap-2"><Info className="w-4 h-4 text-muted-foreground" /> Tipos de senha</p>
+                      <p className="text-xs text-muted-foreground">
+                        Os tipos de senha exibidos no totem são definidos na aba <strong>Senhas</strong> (tipos habilitados nesta unidade).
+                      </p>
                     </div>
-                    <div className="p-4 rounded-xl border">
-                      <p className="font-medium mb-2">Check-in</p>
-                      <p className="text-sm text-muted-foreground mb-2">Identificação por CPF + Data de Nascimento</p>
-                      <ul className="space-y-1 text-sm text-muted-foreground">
-                        <li>• Busca agendamentos do dia</li>
-                        <li>• Confirma presença automaticamente</li>
-                        <li>• Gera senha vinculada à consulta</li>
-                      </ul>
+                    <div className="p-4 rounded-lg border bg-muted/20 space-y-2">
+                      <p className="text-sm font-medium flex items-center gap-2"><Info className="w-4 h-4 text-muted-foreground" /> Check-in</p>
+                      <p className="text-xs text-muted-foreground">
+                        Identificação por CPF + Data de Nascimento. Busca agendamentos do dia, confirma presença e gera senha vinculada.
+                      </p>
                     </div>
-                    <div className="p-4 rounded-xl border">
-                      <p className="font-medium mb-2">QR Code</p>
-                      <p className="text-sm text-muted-foreground">Na tela de resultado, QR Code direciona ao portal mobile para acompanhar a fila</p>
+                    <div className="p-4 rounded-lg border bg-muted/20 space-y-2">
+                      <p className="text-sm font-medium flex items-center gap-2"><Info className="w-4 h-4 text-muted-foreground" /> QR Code / portal mobile</p>
+                      <p className="text-xs text-muted-foreground">
+                        Na tela de resultado, um QR Code direciona o paciente ao portal mobile para acompanhar a fila.
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg border border-dashed bg-muted/10 space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">Em breve</p>
+                      <p className="text-xs text-muted-foreground">
+                        Mensagens personalizadas da tela inicial e tela de sucesso, alternar QR Code de senha virtual e textos do totem por unidade.
+                      </p>
                     </div>
                   </div>
                 </div>

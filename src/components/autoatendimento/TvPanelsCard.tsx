@@ -11,6 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Tv, Plus, Trash2, Pencil, ChevronDown } from "lucide-react";
@@ -31,6 +35,7 @@ export function TvPanelsCard() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(empty);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<TvPanel | null>(null);
 
   const startNew = () => { setDraft(empty); setEditingId(null); setOpen(true); };
   const startEdit = (p: TvPanel) => {
@@ -85,9 +90,7 @@ export function TvPanelsCard() {
             <Button size="sm" variant="ghost" onClick={() => startEdit(p)}>
               <Pencil className="w-4 h-4" />
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => {
-              if (confirm(`Remover o painel "${p.name}"?`)) remove.mutate(p.id);
-            }}>
+            <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(p)}>
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
@@ -168,6 +171,29 @@ export function TvPanelsCard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover painel TV</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover o painel <strong>{confirmDelete?.name}</strong>?
+              Dispositivos que estiverem usando este painel precisarão escolher outro.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDelete) remove.mutate(confirmDelete.id);
+                setConfirmDelete(null);
+              }}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
