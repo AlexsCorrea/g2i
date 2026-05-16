@@ -469,15 +469,14 @@ export default function AdminAutoatendimento() {
           <div className="overflow-x-auto -mx-1 px-1 pb-1">
             <TabsList className="inline-flex w-max gap-1 h-auto p-1 flex-wrap">
               <TabsTrigger value="branding" className="gap-1.5 whitespace-nowrap px-3"><Palette className="w-4 h-4" /> Aparência</TabsTrigger>
-              <TabsTrigger value="ticket_types" className="gap-1.5 whitespace-nowrap px-3"><Tag className="w-4 h-4" /> Senhas</TabsTrigger>
+              <TabsTrigger value="ticket_types" className="gap-1.5 whitespace-nowrap px-3"><Tag className="w-4 h-4" /> Senhas da Unidade</TabsTrigger>
               <TabsTrigger value="totem" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totem</TabsTrigger>
               <TabsTrigger value="print" className="gap-1.5 whitespace-nowrap px-3"><Printer className="w-4 h-4" /> Impressão</TabsTrigger>
               <TabsTrigger value="tv" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Exibição TV</TabsTrigger>
-              <TabsTrigger value="tv_panels" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Painéis TV</TabsTrigger>
               <TabsTrigger value="voice" className="gap-1.5 whitespace-nowrap px-3"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
               <TabsTrigger value="privacy" className="gap-1.5 whitespace-nowrap px-3"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
               <TabsTrigger value="ads" className="gap-1.5 whitespace-nowrap px-3"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
-              <TabsTrigger value="devices" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totens</TabsTrigger>
+              <TabsTrigger value="devices" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totens Físicos</TabsTrigger>
             </TabsList>
           </div>
 
@@ -486,9 +485,6 @@ export default function AdminAutoatendimento() {
           </TabsContent>
           <TabsContent value="devices" className="space-y-6">
             <DevicesTab unitId={selectedUnitId} />
-          </TabsContent>
-          <TabsContent value="tv_panels" className="space-y-6">
-            <TvPanelsCard />
           </TabsContent>
 
 
