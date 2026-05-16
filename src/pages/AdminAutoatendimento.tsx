@@ -566,7 +566,12 @@ export default function AdminAutoatendimento() {
                           <p className="font-medium">{opt.label}</p>
                           <p className="text-sm text-muted-foreground">{opt.desc}</p>
                         </div>
-                        {opt.value === "senha_iniciais" && <Badge>Recomendado</Badge>}
+                        {opt.value === "senha_iniciais" && <Badge>Recomendado para saúde</Badge>}
+                        {opt.value === "nome_completo" && (
+                          <Badge variant="outline" className="text-amber-700 border-amber-400">
+                            Menos recomendado para ambiente público
+                          </Badge>
+                        )}
                       </div>
                     ))}
                   </div>
