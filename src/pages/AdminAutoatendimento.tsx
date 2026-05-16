@@ -906,7 +906,7 @@ export default function AdminAutoatendimento() {
                     <div className="p-4 rounded-lg border bg-muted/20 space-y-2">
                       <p className="text-sm font-medium flex items-center gap-2"><Info className="w-4 h-4 text-muted-foreground" /> Tipos de senha</p>
                       <p className="text-xs text-muted-foreground">
-                        Os tipos de senha exibidos no totem são definidos na aba <strong>Senhas</strong> (tipos habilitados nesta unidade).
+                        Os tipos de senha exibidos no totem são definidos na aba <strong>Senhas da Unidade</strong> (tipos habilitados nesta unidade).
                       </p>
                     </div>
                     <div className="p-4 rounded-lg border bg-muted/20 space-y-2">
