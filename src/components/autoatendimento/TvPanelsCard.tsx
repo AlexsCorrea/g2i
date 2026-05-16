@@ -90,9 +90,7 @@ export function TvPanelsCard() {
             <Button size="sm" variant="ghost" onClick={() => startEdit(p)}>
               <Pencil className="w-4 h-4" />
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => {
-              if (confirm(`Remover o painel "${p.name}"?`)) remove.mutate(p.id);
-            }}>
+            <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(p)}>
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
