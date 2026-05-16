@@ -349,38 +349,46 @@ export default function AdminAutoatendimento() {
           </div>
         </div>
 
-        {/* Institution settings (global) */}
-        <InstitutionSettingsCard />
+        {/* Identidade institucional compacta */}
+        <InstitutionHeaderCompact />
 
-        {/* TV panels (global, independent of units) */}
-        <TvPanelsCard />
-
-        {/* Unit selector */}
-        <Card>
-          <CardContent className="py-4 flex items-center gap-3 flex-wrap">
-            <Building2 className="w-5 h-5 text-muted-foreground" />
-            <Label className="text-sm">Unidade de Totem (setor):</Label>
-            <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
-              <SelectTrigger className="w-72"><SelectValue placeholder="Selecione uma unidade" /></SelectTrigger>
-              <SelectContent>
-                {(units ?? []).map(u => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.name} {!u.active && "(inativa)"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <UnitsManagerDrawer
-              onUnitChanged={(id) => setSelectedUnitId(id)}
-              trigger={
-                <Button size="sm" variant="outline">
-                  <Settings2 className="w-4 h-4 mr-1" /> Gerenciar Unidades
-                </Button>
-              }
-            />
-            <span className="text-xs text-muted-foreground ml-auto">
-              {units?.length ?? 0} unidade(s) cadastrada(s)
-            </span>
+        {/* Contexto de unidade em edição */}
+        <Card className="border-primary/30 bg-primary/[0.02]">
+          <CardContent className="py-4 space-y-3">
+            <div className="flex items-start gap-3 flex-wrap">
+              <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                <MapPin className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-[220px]">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Você está configurando</p>
+                <p className="text-lg font-bold leading-tight">
+                  {config?.unit_name || (units?.find(u => u.id === selectedUnitId)?.name) || "Selecione uma unidade"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  As configurações abaixo se aplicam apenas a esta unidade/setor.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
+                  <SelectTrigger className="w-64"><SelectValue placeholder="Selecione uma unidade" /></SelectTrigger>
+                  <SelectContent>
+                    {(units ?? []).map(u => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name} {!u.active && "(inativa)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <UnitsManagerDrawer
+                  onUnitChanged={(id) => setSelectedUnitId(id)}
+                  trigger={
+                    <Button size="sm" variant="outline">
+                      <Settings2 className="w-4 h-4 mr-1" /> Gerenciar
+                    </Button>
+                  }
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
