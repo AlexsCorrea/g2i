@@ -35,6 +35,7 @@ export function TvPanelsCard() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(empty);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<TvPanel | null>(null);
 
   const startNew = () => { setDraft(empty); setEditingId(null); setOpen(true); };
   const startEdit = (p: TvPanel) => {
