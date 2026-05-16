@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   useGlobalTicketTypes,
-  useUpsertGlobalTicketType,
-  useDeleteGlobalTicketType,
   useUnitTicketTypes,
   useSaveUnitTicketTypesBatch,
   type GlobalTicketType,
@@ -16,10 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import { Plus, Trash2, Save, AlertCircle, ChevronDown, Settings2, BookOpen } from "lucide-react";
+import { GlobalCatalogDialog } from "@/components/autoatendimento/GlobalCatalogDialog";
+import { Trash2, Save, AlertCircle, ChevronDown, Settings2, BookOpen, Globe } from "lucide-react";
 import { toast } from "sonner";
 
 type Draft = UnitTicketTypeDraft;
