@@ -591,8 +591,11 @@ export default function AdminAutoatendimento() {
           <TabsContent value="tv" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Configurações do Painel TV</CardTitle>
-                <CardDescription>Comportamento da tela pública de chamadas em sala de espera</CardDescription>
+                <CardTitle>Exibição do Painel TV</CardTitle>
+                <CardDescription>
+                  Comportamento visual e sonoro do painel de chamadas desta unidade. O cadastro dos
+                  dispositivos físicos fica na aba <strong>Painéis TV</strong>.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
