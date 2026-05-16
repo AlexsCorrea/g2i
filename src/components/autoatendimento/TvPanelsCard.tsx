@@ -171,6 +171,29 @@ export function TvPanelsCard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover painel TV</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover o painel <strong>{confirmDelete?.name}</strong>?
+              Dispositivos que estiverem usando este painel precisarão escolher outro.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDelete) remove.mutate(confirmDelete.id);
+                setConfirmDelete(null);
+              }}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
