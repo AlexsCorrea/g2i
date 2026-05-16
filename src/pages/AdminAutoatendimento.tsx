@@ -21,8 +21,9 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import {
   Palette, Image, Tv, Monitor, Settings2, Upload, Trash2, GripVertical, Plus, Tag,
-  ArrowLeft, Eye, Volume2, Clock, ShieldCheck, Megaphone, Play, Mic, Printer, Building2,
+  ArrowLeft, Eye, Volume2, Clock, ShieldCheck, Megaphone, Play, Mic, Printer, Building2, MapPin, Info,
 } from "lucide-react";
+import { InstitutionHeaderCompact } from "@/components/autoatendimento/InstitutionHeaderCompact";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminAutoatendimento() {
