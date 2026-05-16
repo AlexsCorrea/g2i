@@ -8,6 +8,10 @@ import { DevicesTab } from "@/components/autoatendimento/DevicesTab";
 import { UnitsManagerDrawer } from "@/components/autoatendimento/UnitsManagerDrawer";
 
 import { TvPanelsCard } from "@/components/autoatendimento/TvPanelsCard";
+import { GlobalCatalogDialog } from "@/components/autoatendimento/GlobalCatalogDialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
