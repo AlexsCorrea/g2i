@@ -44,6 +44,7 @@ export function GlobalCatalogDialog({ trigger, open, onOpenChange }: Props) {
   const originalRef = useRef<Record<string, string>>({});
   const [newDraft, setNewDraft] = useState({ label: "", prefix: "N", color: "#1e5a8a" });
   const [confirmDelete, setConfirmDelete] = useState<EditableRow | null>(null);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   // Sync rows from server every time the catalog loads / dialog opens
   useEffect(() => {
