@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   useGlobalTicketTypes,
-  useUpsertGlobalTicketType,
-  useDeleteGlobalTicketType,
   useUnitTicketTypes,
   useSaveUnitTicketTypesBatch,
   type GlobalTicketType,
@@ -16,10 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import { Plus, Trash2, Save, AlertCircle, ChevronDown, Settings2, BookOpen } from "lucide-react";
+import { GlobalCatalogDialog } from "@/components/autoatendimento/GlobalCatalogDialog";
+import { Trash2, Save, AlertCircle, ChevronDown, Settings2, BookOpen, Globe } from "lucide-react";
 import { toast } from "sonner";
 
 type Draft = UnitTicketTypeDraft;
@@ -37,17 +33,11 @@ function normalizeDraft(d: Draft): string {
 export function TicketTypesTab({ unitId }: { unitId: string }) {
   const { data: globals } = useGlobalTicketTypes();
   const { data: unitLinks } = useUnitTicketTypes(unitId);
-  const upsertGlobal = useUpsertGlobalTicketType();
-  const removeGlobal = useDeleteGlobalTicketType();
   const saveBatch = useSaveUnitTicketTypesBatch();
 
-  const [draftG, setDraftG] = useState({ label: "", prefix: "N", color: "#1e5a8a" });
-
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
-  // Snapshot of the original loaded state — used to compute real dirty state
   const originalRef = useRef<Record<string, string>>({});
 
-  // (Re)initialise drafts from server state every time unitId/links/globals change
   useEffect(() => {
     const next: Record<string, Draft> = {};
     const orig: Record<string, string> = {};
@@ -68,7 +58,6 @@ export function TicketTypesTab({ unitId }: { unitId: string }) {
     originalRef.current = orig;
   }, [unitId, globals, unitLinks]);
 
-  // Real dirty-state computation
   const dirtyIds = useMemo(() => {
     const ids: string[] = [];
     Object.entries(drafts).forEach(([gid, d]) => {
@@ -99,13 +88,11 @@ export function TicketTypesTab({ unitId }: { unitId: string }) {
       return;
     }
     await saveBatch.mutateAsync({ unit_id: unitId, items });
-    // Reset originals against the saved state (drafts will be re-synced when unitLinks invalidates)
     const newOrig = { ...originalRef.current };
     dirtyIds.forEach((gid) => { newOrig[gid] = normalizeDraft(drafts[gid]); });
     originalRef.current = newOrig;
   };
 
-  // Warn on unload only when there are real pending changes
   useEffect(() => {
     if (dirtyCount === 0) return;
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
@@ -113,27 +100,14 @@ export function TicketTypesTab({ unitId }: { unitId: string }) {
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirtyCount]);
 
-  const handleAddGlobal = async () => {
-    if (!draftG.label.trim()) return;
-    await upsertGlobal.mutateAsync({
-      label: draftG.label.trim(),
-      prefix: draftG.prefix.toUpperCase().slice(0, 2) || "N",
-      color: draftG.color,
-    });
-    setDraftG({ label: "", prefix: "N", color: "#1e5a8a" });
-  };
-
-  const [catalogOpen, setCatalogOpen] = useState(false);
-
   return (
     <div className="space-y-4">
-      {/* ===== Habilitação por unidade (área principal) ===== */}
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
           <div>
-            <CardTitle>Tipos disponíveis nesta unidade</CardTitle>
+            <CardTitle>Senhas habilitadas nesta unidade</CardTitle>
             <CardDescription>
-              Habilite os tipos do catálogo global que devem aparecer neste setor e ajuste as prioridades aceitas.
+              Selecione, entre os tipos do <strong>catálogo global</strong>, quais devem aparecer neste setor e ajuste prioridades, ordem e cor.
             </CardDescription>
           </div>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
@@ -142,69 +116,13 @@ export function TicketTypesTab({ unitId }: { unitId: string }) {
                 <AlertCircle className="w-3 h-3 mr-1" /> {dirtyCount} alteração(ões) não salva(s)
               </Badge>
             )}
-            <Dialog open={catalogOpen} onOpenChange={setCatalogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <BookOpen className="w-4 h-4 mr-1" /> Gerenciar catálogo
+            <GlobalCatalogDialog
+              trigger={
+                <Button variant="outline" size="sm" title="Cadastro global — disponível para todas as unidades">
+                  <Globe className="w-4 h-4 mr-1" /> Gerenciar catálogo global
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Catálogo global de tipos de senha</DialogTitle>
-                  <DialogDescription>
-                    Tipos reutilizáveis em todas as unidades. Cada unidade decide quais habilitar.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-3 pt-2">
-                  <div className="space-y-2">
-                    {(globals ?? []).map((g) => (
-                      <GlobalRow
-                        key={g.id}
-                        item={g}
-                        onSave={(p) => upsertGlobal.mutate({ ...p, id: g.id } as any)}
-                        onDelete={() => removeGlobal.mutate(g.id)}
-                      />
-                    ))}
-                    {(globals?.length ?? 0) === 0 && (
-                      <p className="text-sm text-muted-foreground">Nenhum tipo global cadastrado.</p>
-                    )}
-                  </div>
-
-                  <div className="border-t pt-3">
-                    <p className="text-sm font-semibold mb-2">Novo tipo</p>
-                    <div className="grid grid-cols-12 gap-2 items-end">
-                      <div className="col-span-6">
-                        <Label className="text-xs">Nome</Label>
-                        <Input
-                          value={draftG.label}
-                          onChange={(e) => setDraftG({ ...draftG, label: e.target.value })}
-                          placeholder="Ex.: Consulta, Retorno, Exames…"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Label className="text-xs">Sigla</Label>
-                        <Input
-                          value={draftG.prefix}
-                          onChange={(e) => setDraftG({ ...draftG, prefix: e.target.value.toUpperCase().slice(0, 2) })}
-                        />
-                      </div>
-                      <div className="col-span-3">
-                        <Label className="text-xs">Cor</Label>
-                        <Input type="color" value={draftG.color} onChange={(e) => setDraftG({ ...draftG, color: e.target.value })} />
-                      </div>
-                      <div className="col-span-1">
-                        <Button onClick={handleAddGlobal} className="w-full" disabled={upsertGlobal.isPending}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      O código é gerado automaticamente a partir do nome (único e normalizado).
-                    </p>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+              }
+            />
             <Button onClick={handleSaveAll} disabled={dirtyCount === 0 || saveBatch.isPending}>
               <Save className="w-4 h-4 mr-1" /> Salvar alterações
             </Button>
@@ -213,7 +131,7 @@ export function TicketTypesTab({ unitId }: { unitId: string }) {
         <CardContent className="space-y-2">
           {(globals ?? []).length === 0 && (
             <div className="text-sm text-muted-foreground text-center py-8 border border-dashed rounded-lg">
-              Nenhum tipo no catálogo. Clique em <strong>Gerenciar catálogo</strong> para cadastrar.
+              Nenhum tipo no catálogo global. Clique em <strong>Gerenciar catálogo global</strong> para cadastrar.
             </div>
           )}
           {(globals ?? []).map((g) => {
@@ -372,46 +290,6 @@ function UnitTypeRow({
           </div>
         </CollapsibleContent>
       </Collapsible>
-    </div>
-  );
-}
-
-function GlobalRow({
-  item,
-  onSave,
-  onDelete,
-}: {
-  item: GlobalTicketType;
-  onSave: (p: Partial<GlobalTicketType>) => void;
-  onDelete: () => void;
-}) {
-  const [v, setV] = useState(item);
-  useEffect(() => setV(item), [item]);
-  const dirty = JSON.stringify(v) !== JSON.stringify(item);
-  return (
-    <div className="grid grid-cols-12 gap-2 items-center border rounded p-2 bg-card">
-      <div className="col-span-4">
-        <Input value={v.label} onChange={(e) => setV({ ...v, label: e.target.value })} className="h-8" />
-      </div>
-      <div className="col-span-2 font-mono text-xs text-muted-foreground truncate">{v.code}</div>
-      <div className="col-span-1">
-        <Input value={v.prefix} onChange={(e) => setV({ ...v, prefix: e.target.value.toUpperCase().slice(0, 2) })} className="h-8" />
-      </div>
-      <div className="col-span-1">
-        <Input type="color" value={v.color || "#1e5a8a"} onChange={(e) => setV({ ...v, color: e.target.value })} className="h-8" />
-      </div>
-      <div className="col-span-2 flex items-center gap-2">
-        <Switch checked={v.active} onCheckedChange={(a) => setV({ ...v, active: a })} />
-        <span className="text-xs">{v.active ? "Ativo" : "Inativo"}</span>
-      </div>
-      <div className="col-span-2 flex gap-1 justify-end">
-        <Button size="sm" variant={dirty ? "default" : "outline"} disabled={!dirty} onClick={() => onSave({ label: v.label, prefix: v.prefix, color: v.color, active: v.active })}>
-          Salvar
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onDelete}>
-          <Trash2 className="w-3 h-3" />
-        </Button>
-      </div>
     </div>
   );
 }

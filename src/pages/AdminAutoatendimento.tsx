@@ -8,6 +8,10 @@ import { DevicesTab } from "@/components/autoatendimento/DevicesTab";
 import { UnitsManagerDrawer } from "@/components/autoatendimento/UnitsManagerDrawer";
 
 import { TvPanelsCard } from "@/components/autoatendimento/TvPanelsCard";
+import { GlobalCatalogDialog } from "@/components/autoatendimento/GlobalCatalogDialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +35,7 @@ export default function AdminAutoatendimento() {
   const { data: units } = useTotemUnits();
   const { data: institution } = useInstitutionSettings();
   const [selectedUnitId, setSelectedUnitId] = useState<string>("");
+  const [globalRegistry, setGlobalRegistry] = useState<"tv_panels" | "catalog" | null>(null);
   const deleteUnit = useDeleteTotemUnit();
 
   // Auto-select first unit
@@ -352,6 +357,71 @@ export default function AdminAutoatendimento() {
         {/* Identidade institucional compacta */}
         <InstitutionHeaderCompact />
 
+        {/* Cadastros Globais do Autoatendimento */}
+        <Card className="border-dashed">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-muted-foreground" />
+              Cadastros Globais do Autoatendimento
+            </CardTitle>
+            <CardDescription>
+              Valem para toda a instituição, independentemente da unidade selecionada abaixo.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setGlobalRegistry("tv_panels")}
+                className="text-left p-3 rounded-lg border bg-card hover:border-primary/40 hover:bg-muted/30 transition-colors flex items-start gap-3"
+              >
+                <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                  <Tv className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm">Gerenciar Painéis TV</p>
+                  <p className="text-xs text-muted-foreground">
+                    Cadastro de TVs físicas. Cada dispositivo escolhe qual painel é ao abrir /painel-tv.
+                  </p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGlobalRegistry("catalog")}
+                className="text-left p-3 rounded-lg border bg-card hover:border-primary/40 hover:bg-muted/30 transition-colors flex items-start gap-3"
+              >
+                <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                  <Tag className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm">Gerenciar Catálogo de Tipos de Senha</p>
+                  <p className="text-xs text-muted-foreground">
+                    Cria os tipos reutilizáveis. As unidades escolhem quais habilitar.
+                  </p>
+                </div>
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dialogs globais */}
+        <Dialog open={globalRegistry === "tv_panels"} onOpenChange={(o) => !o && setGlobalRegistry(null)}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Painéis TV — Cadastro Global</DialogTitle>
+              <DialogDescription>
+                Dispositivos físicos disponíveis para toda a instituição.
+              </DialogDescription>
+            </DialogHeader>
+            <TvPanelsCard />
+          </DialogContent>
+        </Dialog>
+        <GlobalCatalogDialog
+          open={globalRegistry === "catalog"}
+          onOpenChange={(o) => !o && setGlobalRegistry(null)}
+        />
+
+
         {/* Contexto de unidade em edição */}
         <Card className="border-primary/30 bg-primary/[0.02]">
           <CardContent className="py-4 space-y-3">
@@ -399,15 +469,14 @@ export default function AdminAutoatendimento() {
           <div className="overflow-x-auto -mx-1 px-1 pb-1">
             <TabsList className="inline-flex w-max gap-1 h-auto p-1 flex-wrap">
               <TabsTrigger value="branding" className="gap-1.5 whitespace-nowrap px-3"><Palette className="w-4 h-4" /> Aparência</TabsTrigger>
-              <TabsTrigger value="ticket_types" className="gap-1.5 whitespace-nowrap px-3"><Tag className="w-4 h-4" /> Senhas</TabsTrigger>
+              <TabsTrigger value="ticket_types" className="gap-1.5 whitespace-nowrap px-3"><Tag className="w-4 h-4" /> Senhas da Unidade</TabsTrigger>
               <TabsTrigger value="totem" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totem</TabsTrigger>
               <TabsTrigger value="print" className="gap-1.5 whitespace-nowrap px-3"><Printer className="w-4 h-4" /> Impressão</TabsTrigger>
               <TabsTrigger value="tv" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Exibição TV</TabsTrigger>
-              <TabsTrigger value="tv_panels" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Painéis TV</TabsTrigger>
               <TabsTrigger value="voice" className="gap-1.5 whitespace-nowrap px-3"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
               <TabsTrigger value="privacy" className="gap-1.5 whitespace-nowrap px-3"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
               <TabsTrigger value="ads" className="gap-1.5 whitespace-nowrap px-3"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
-              <TabsTrigger value="devices" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totens</TabsTrigger>
+              <TabsTrigger value="devices" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totens Físicos</TabsTrigger>
             </TabsList>
           </div>
 
@@ -416,9 +485,6 @@ export default function AdminAutoatendimento() {
           </TabsContent>
           <TabsContent value="devices" className="space-y-6">
             <DevicesTab unitId={selectedUnitId} />
-          </TabsContent>
-          <TabsContent value="tv_panels" className="space-y-6">
-            <TvPanelsCard />
           </TabsContent>
 
 
@@ -840,7 +906,7 @@ export default function AdminAutoatendimento() {
                     <div className="p-4 rounded-lg border bg-muted/20 space-y-2">
                       <p className="text-sm font-medium flex items-center gap-2"><Info className="w-4 h-4 text-muted-foreground" /> Tipos de senha</p>
                       <p className="text-xs text-muted-foreground">
-                        Os tipos de senha exibidos no totem são definidos na aba <strong>Senhas</strong> (tipos habilitados nesta unidade).
+                        Os tipos de senha exibidos no totem são definidos na aba <strong>Senhas da Unidade</strong> (tipos habilitados nesta unidade).
                       </p>
                     </div>
                     <div className="p-4 rounded-lg border bg-muted/20 space-y-2">
