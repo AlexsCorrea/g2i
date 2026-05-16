@@ -397,16 +397,17 @@ export default function AdminAutoatendimento() {
         ) : (
         <Tabs defaultValue="branding" className="space-y-6">
           <div className="overflow-x-auto -mx-1 px-1 pb-1">
-            <TabsList className="inline-flex w-max gap-1 h-auto p-1">
-              <TabsTrigger value="branding" className="gap-1.5 whitespace-nowrap px-3"><Palette className="w-4 h-4" /> Aparência do Totem</TabsTrigger>
+            <TabsList className="inline-flex w-max gap-1 h-auto p-1 flex-wrap">
+              <TabsTrigger value="branding" className="gap-1.5 whitespace-nowrap px-3"><Palette className="w-4 h-4" /> Aparência</TabsTrigger>
               <TabsTrigger value="ticket_types" className="gap-1.5 whitespace-nowrap px-3"><Tag className="w-4 h-4" /> Senhas</TabsTrigger>
-              <TabsTrigger value="privacy" className="gap-1.5 whitespace-nowrap px-3"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
-              <TabsTrigger value="tv" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Painel TV</TabsTrigger>
-              <TabsTrigger value="voice" className="gap-1.5 whitespace-nowrap px-3"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
-              <TabsTrigger value="ads" className="gap-1.5 whitespace-nowrap px-3"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
               <TabsTrigger value="totem" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totem</TabsTrigger>
               <TabsTrigger value="print" className="gap-1.5 whitespace-nowrap px-3"><Printer className="w-4 h-4" /> Impressão</TabsTrigger>
-              <TabsTrigger value="devices" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totens Físicos</TabsTrigger>
+              <TabsTrigger value="tv" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Exibição TV</TabsTrigger>
+              <TabsTrigger value="tv_panels" className="gap-1.5 whitespace-nowrap px-3"><Tv className="w-4 h-4" /> Painéis TV</TabsTrigger>
+              <TabsTrigger value="voice" className="gap-1.5 whitespace-nowrap px-3"><Mic className="w-4 h-4" /> Voz</TabsTrigger>
+              <TabsTrigger value="privacy" className="gap-1.5 whitespace-nowrap px-3"><ShieldCheck className="w-4 h-4" /> Privacidade</TabsTrigger>
+              <TabsTrigger value="ads" className="gap-1.5 whitespace-nowrap px-3"><Megaphone className="w-4 h-4" /> Anúncios</TabsTrigger>
+              <TabsTrigger value="devices" className="gap-1.5 whitespace-nowrap px-3"><Monitor className="w-4 h-4" /> Totens</TabsTrigger>
             </TabsList>
           </div>
 
@@ -416,14 +417,17 @@ export default function AdminAutoatendimento() {
           <TabsContent value="devices" className="space-y-6">
             <DevicesTab unitId={selectedUnitId} />
           </TabsContent>
+          <TabsContent value="tv_panels" className="space-y-6">
+            <TvPanelsCard />
+          </TabsContent>
 
 
           {/* BRANDING TAB */}
           <TabsContent value="branding" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Aparência do Totem</CardTitle>
-                <CardDescription>Visual aplicado ao totem, portal mobile e painel TV desta unidade. A identidade global da clínica/hospital fica no card "Identidade da Instituição" acima.</CardDescription>
+                <CardTitle>Aparência da Unidade</CardTitle>
+                <CardDescription>Visual aplicado ao totem, portal mobile e painel TV desta unidade. A marca global da instituição fica no cabeçalho acima.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
