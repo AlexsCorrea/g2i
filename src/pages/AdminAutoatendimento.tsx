@@ -35,6 +35,7 @@ export default function AdminAutoatendimento() {
   const { data: units } = useTotemUnits();
   const { data: institution } = useInstitutionSettings();
   const [selectedUnitId, setSelectedUnitId] = useState<string>("");
+  const [globalRegistry, setGlobalRegistry] = useState<"tv_panels" | "catalog" | null>(null);
   const deleteUnit = useDeleteTotemUnit();
 
   // Auto-select first unit
