@@ -164,9 +164,14 @@ export default function AgendaOperational() {
           const d = parseLocalTime(a.scheduled_at);
           return d >= weekStart && d <= weekEnd;
         })
-      : dayAppointments;
+      : viewMode === "month"
+        ? weekAppointments?.filter(a => {
+            const d = parseLocalTime(a.scheduled_at);
+            return d >= monthGridStart && d <= monthGridEnd;
+          })
+        : dayAppointments;
     return raw || [];
-  }, [viewMode, dayAppointments, weekAppointments, weekStart, weekEnd]);
+  }, [viewMode, dayAppointments, weekAppointments, weekStart, weekEnd, monthGridStart, monthGridEnd]);
 
   const filteredAppointments = useMemo(() => {
     return appointments.filter((a) => {
