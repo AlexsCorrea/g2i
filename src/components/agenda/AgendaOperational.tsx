@@ -977,6 +977,71 @@ export default function AgendaOperational() {
             </div>
           ) : viewMode === "day" ? (
             renderMultiAgendaDay()
+          ) : viewMode === "month" ? (
+            /* Month view */
+            <Card>
+              <CardContent className="p-0 overflow-hidden">
+                <div className="grid grid-cols-7 border-b bg-muted/30">
+                  {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(d => (
+                    <div key={d} className="px-2 py-2 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wide border-r last:border-r-0">{d}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 auto-rows-fr">
+                  {monthDays.map((day, idx) => {
+                    const inMonth = isSameMonth(day, selectedDate);
+                    const isToday = isSameDay(day, new Date());
+                    const dayAppts = filteredAppointments?.filter(a => isSameDay(parseLocalTime(a.scheduled_at), day))
+                      .sort((a, b) => parseLocalTime(a.scheduled_at).getTime() - parseLocalTime(b.scheduled_at).getTime()) || [];
+                    const maxShow = 3;
+                    const extra = dayAppts.length - maxShow;
+                    return (
+                      <div
+                        key={day.toISOString()}
+                        className={cn(
+                          "min-h-[110px] border-r border-b last:border-r-0 p-1.5 flex flex-col gap-1 cursor-pointer hover:bg-muted/40 transition-colors",
+                          !inMonth && "bg-muted/20 text-muted-foreground/60",
+                          isToday && "bg-primary/5",
+                          (idx + 1) % 7 === 0 && "border-r-0",
+                        )}
+                        onClick={() => { setSelectedDate(day); setViewMode("day"); }}
+                        onDoubleClick={(e) => { e.stopPropagation(); openNewAppointment(format(day, "yyyy-MM-dd"), "08:00"); }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={cn(
+                            "text-xs font-semibold tabular-nums",
+                            isToday && "inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary text-primary-foreground",
+                          )}>{format(day, "d")}</span>
+                          {dayAppts.length > 0 && (
+                            <Badge variant="secondary" className="h-4 px-1.5 text-[9px] font-medium">{dayAppts.length}</Badge>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-0.5 overflow-hidden">
+                          {dayAppts.slice(0, maxShow).map(a => {
+                            const sc = statusConfig[a.status] || statusConfig.agendado;
+                            const agColor = getAgendaColor((a as any).agenda_id);
+                            return (
+                              <div
+                                key={a.id}
+                                className={cn("text-[10px] px-1 py-0.5 rounded truncate flex items-center gap-1", sc.color)}
+                                style={{ borderLeft: `2px solid ${agColor}` }}
+                                onClick={(e) => { e.stopPropagation(); setSelectedAppt(a); }}
+                                title={`${formatTime(a.scheduled_at)} ${a.patients?.full_name || a.title}`}
+                              >
+                                <span className="font-mono font-semibold shrink-0">{formatTime(a.scheduled_at)}</span>
+                                <span className="truncate">{a.patients?.full_name || (a as any).provisional_name || a.title}</span>
+                              </div>
+                            );
+                          })}
+                          {extra > 0 && (
+                            <div className="text-[9px] text-muted-foreground font-medium px-1">+{extra} mais</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           ) : (
             /* Week view */
             <Card>
