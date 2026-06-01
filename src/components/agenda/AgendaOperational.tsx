@@ -815,7 +815,10 @@ export default function AgendaOperational() {
           <div className="flex flex-wrap items-center gap-2">
             {/* Date nav */}
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setSelectedDate(subDays(selectedDate, viewMode === "week" ? 7 : 1))}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
+                if (viewMode === "month") setSelectedDate(subMonths(selectedDate, 1));
+                else setSelectedDate(subDays(selectedDate, viewMode === "week" ? 7 : 1));
+              }}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -824,7 +827,9 @@ export default function AgendaOperational() {
                     <CalendarIcon className="h-3.5 w-3.5" />
                     {viewMode === "week"
                       ? `${format(weekStart, "dd/MM")} — ${format(weekEnd, "dd/MM/yyyy")}`
-                      : format(selectedDate, "dd/MM/yyyy (EEE)", { locale: ptBR })
+                      : viewMode === "month"
+                        ? format(selectedDate, "MMMM 'de' yyyy", { locale: ptBR })
+                        : format(selectedDate, "dd/MM/yyyy (EEE)", { locale: ptBR })
                     }
                   </Button>
                 </PopoverTrigger>
@@ -832,7 +837,10 @@ export default function AgendaOperational() {
                   <Calendar mode="single" selected={selectedDate} onSelect={d => { if (d) { setSelectedDate(d); setCalendarOpen(false); } }} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setSelectedDate(addDays(selectedDate, viewMode === "week" ? 7 : 1))}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
+                if (viewMode === "month") setSelectedDate(addMonths(selectedDate, 1));
+                else setSelectedDate(addDays(selectedDate, viewMode === "week" ? 7 : 1));
+              }}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setSelectedDate(new Date())}>Hoje</Button>
