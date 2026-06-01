@@ -964,17 +964,165 @@ export default function AgendaOperational() {
           {isLoading ? (
             <div className="flex items-center justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
           ) : viewMode === "list" ? (
-            <div className="space-y-2">
-              {!filteredAppointments?.length ? (
-                <Card className="p-8 text-center">
-                  <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-                  <p className="text-muted-foreground">Nenhum agendamento</p>
-                  <Button variant="link" onClick={() => openNewAppointment(dateStr, "08:00")}>Criar agendamento</Button>
-                </Card>
-              ) : (
-                filteredAppointments.map(a => renderAppointmentCard(a))
-              )}
-            </div>
+            (() => {
+              const dayOfWeek = selectedDate.getDay();
+              const cols = displayedAgendas.length > 0 ? displayedAgendas : [];
+              if (cols.length === 0) {
+                return (
+                  <Card className="p-8 text-center">
+                    <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+                    <p className="text-muted-foreground">Nenhuma agenda selecionada</p>
+                  </Card>
+                );
+              }
+              return (
+                <div className="space-y-3">
+                  {cols.map((ag) => {
+                    const prof: any = (ag as any).profiles;
+                    const agColor = (ag as any).color || "hsl(var(--muted-foreground))";
+                    const agPeriods = periods
+                      .filter(p => p.agenda_id === ag.id && p.day_of_week === dayOfWeek)
+                      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+                    const interval = ag.default_interval || 30;
+                    const agAppts = filteredAppointments.filter(a => (a as any).agenda_id === ag.id);
+
+                    // Build slots from each period
+                    const slots: { time: string; periodLabel: string }[] = [];
+                    agPeriods.forEach(p => {
+                      const [sh, sm] = p.start_time.split(":").map(Number);
+                      const [eh, em] = p.end_time.split(":").map(Number);
+                      const startMin = sh * 60 + sm;
+                      const endMin = eh * 60 + em;
+                      const label = `${p.start_time.slice(0,5)}–${p.end_time.slice(0,5)}`;
+                      for (let m = startMin; m < endMin; m += interval) {
+                        const h = Math.floor(m / 60), mm = m % 60;
+                        slots.push({
+                          time: `${String(h).padStart(2,"0")}:${String(mm).padStart(2,"0")}`,
+                          periodLabel: label,
+                        });
+                      }
+                    });
+
+                    // Appointments outside periods (encaixes / fora de horário)
+                    const slotSet = new Set(slots.map(s => s.time));
+                    const extraAppts = agAppts.filter(a => {
+                      const d = parseLocalTime(a.scheduled_at);
+                      const t = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+                      return !slotSet.has(t);
+                    });
+
+                    const totalAppts = agAppts.length;
+
+                    return (
+                      <Card key={ag.id} className="overflow-hidden">
+                        <div
+                          className="flex items-center gap-3 px-4 py-2.5 border-b bg-muted/30"
+                          style={{ borderLeft: `4px solid ${agColor}` }}
+                        >
+                          {ag.professional_id && (
+                            <Avatar className="h-8 w-8 shrink-0">
+                              {prof?.avatar_url ? <AvatarImage src={prof.avatar_url} alt={prof?.full_name || ag.name} /> : null}
+                              <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+                                {(prof?.full_name || ag.name).split(" ").filter(Boolean).map((w: string) => w[0]).slice(0,2).join("").toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate">{prof?.full_name || ag.name}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {(ag.specialty || prof?.specialty || ag.unit || "")} · intervalo {interval}min
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className={cn("text-[10px] font-mono", agPeriods.length > 0 ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-destructive/70")}>
+                              {agPeriods.length > 0 ? agPeriods.map(p => `${p.start_time.slice(0,5)}–${p.end_time.slice(0,5)}`).join(" | ") : "Sem período"}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">{totalAppts} agendamento{totalAppts !== 1 ? "s" : ""}</p>
+                          </div>
+                        </div>
+
+                        {slots.length === 0 && extraAppts.length === 0 ? (
+                          <div className="px-4 py-6 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                            <Lock className="h-3.5 w-3.5" /> Agenda fechada neste dia
+                          </div>
+                        ) : (
+                          <div className="divide-y">
+                            {(() => {
+                              let lastPeriod = "";
+                              return slots.map(({ time, periodLabel }) => {
+                                const [h, m] = time.split(":").map(Number);
+                                const blockReason = isSlotBlocked(ag.id, selectedDate, h);
+                                const slotAppts = agAppts.filter(a => {
+                                  const d = parseLocalTime(a.scheduled_at);
+                                  return d.getHours() === h && Math.floor(d.getMinutes() / interval) * interval === m;
+                                });
+                                const showPeriodHeader = periodLabel !== lastPeriod;
+                                lastPeriod = periodLabel;
+                                return (
+                                  <div key={time}>
+                                    {showPeriodHeader && (
+                                      <div className="px-4 py-1 bg-muted/20 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b">
+                                        Período {periodLabel}
+                                      </div>
+                                    )}
+                                    <div className={cn(
+                                      "flex items-stretch gap-2 px-3 py-1.5 hover:bg-muted/20 transition-colors",
+                                      blockReason && "bg-destructive/5",
+                                    )}>
+                                      <div className="w-14 shrink-0 flex items-center">
+                                        <span className="font-mono text-xs font-bold tabular-nums text-foreground/70">{time}</span>
+                                      </div>
+                                      <div className="flex-1 min-w-0 space-y-1">
+                                        {blockReason && !slotAppts.length ? (
+                                          <div className="flex items-center gap-1.5 text-xs text-destructive/70 italic">
+                                            <Ban className="h-3 w-3" /> {blockReason}
+                                          </div>
+                                        ) : slotAppts.length ? (
+                                          slotAppts.map(a => renderAppointmentCard(a))
+                                        ) : (
+                                          <button
+                                            className="w-full text-left text-[11px] text-muted-foreground/60 italic hover:text-primary hover:bg-primary/5 rounded px-2 py-1 border border-dashed border-transparent hover:border-primary/30 transition-all flex items-center gap-1.5"
+                                            onClick={() => handleSlotClick(time, ag)}
+                                          >
+                                            <Plus className="h-3 w-3" /> Horário livre
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              });
+                            })()}
+
+                            {extraAppts.length > 0 && (
+                              <div>
+                                <div className="px-4 py-1 bg-violet-50 dark:bg-violet-950/30 text-[10px] font-semibold uppercase tracking-wider text-violet-700 dark:text-violet-300 border-b border-violet-200/50">
+                                  Fora do período / Encaixes
+                                </div>
+                                {extraAppts
+                                  .sort((a, b) => parseLocalTime(a.scheduled_at).getTime() - parseLocalTime(b.scheduled_at).getTime())
+                                  .map(a => {
+                                    const d = parseLocalTime(a.scheduled_at);
+                                    const t = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+                                    return (
+                                      <div key={a.id} className="flex items-stretch gap-2 px-3 py-1.5">
+                                        <div className="w-14 shrink-0 flex items-center">
+                                          <span className="font-mono text-xs font-bold tabular-nums text-foreground/70">{t}</span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">{renderAppointmentCard(a)}</div>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              );
+            })()
           ) : viewMode === "day" ? (
             renderMultiAgendaDay()
           ) : viewMode === "month" ? (
