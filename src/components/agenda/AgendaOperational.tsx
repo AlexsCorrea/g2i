@@ -24,8 +24,9 @@ import {
   FileText, CheckCircle, UserCheck, Edit, Phone, X,
   Ban, RotateCcw, PlayCircle, DoorOpen, Eye, Filter, AlertTriangle, Lock, Users, GripVertical
 } from "lucide-react";
-import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
+import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isHourAvailable, isTimeAvailable } from "@/lib/agendaAvailability";
 import { toast } from "sonner";
@@ -74,7 +75,7 @@ export default function AgendaOperational() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [viewMode, setViewMode] = useState<"list" | "day" | "week">("day");
+  const [viewMode, setViewMode] = useState<"list" | "day" | "week" | "month">("day");
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
@@ -107,9 +108,14 @@ export default function AgendaOperational() {
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+  const monthStart = startOfMonth(selectedDate);
+  const monthEnd = endOfMonth(selectedDate);
+  const monthGridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const monthGridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  const monthDays = eachDayOfInterval({ start: monthGridStart, end: monthGridEnd });
 
-  const { data: dayAppointments, isLoading } = useAppointments({ date: viewMode === "week" ? undefined : dateStr });
-  const { data: weekAppointments } = useAppointments(viewMode === "week" ? {} : undefined);
+  const { data: dayAppointments, isLoading } = useAppointments({ date: (viewMode === "week" || viewMode === "month") ? undefined : dateStr });
+  const { data: weekAppointments } = useAppointments((viewMode === "week" || viewMode === "month") ? {} : undefined);
   const { data: agendas } = useScheduleAgendas();
   const { data: allPeriods } = useSchedulePeriods();
   const { data: allBlocks } = useScheduleBlocks();
@@ -158,9 +164,14 @@ export default function AgendaOperational() {
           const d = parseLocalTime(a.scheduled_at);
           return d >= weekStart && d <= weekEnd;
         })
-      : dayAppointments;
+      : viewMode === "month"
+        ? weekAppointments?.filter(a => {
+            const d = parseLocalTime(a.scheduled_at);
+            return d >= monthGridStart && d <= monthGridEnd;
+          })
+        : dayAppointments;
     return raw || [];
-  }, [viewMode, dayAppointments, weekAppointments, weekStart, weekEnd]);
+  }, [viewMode, dayAppointments, weekAppointments, weekStart, weekEnd, monthGridStart, monthGridEnd]);
 
   const filteredAppointments = useMemo(() => {
     return appointments.filter((a) => {
@@ -804,7 +815,10 @@ export default function AgendaOperational() {
           <div className="flex flex-wrap items-center gap-2">
             {/* Date nav */}
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setSelectedDate(subDays(selectedDate, viewMode === "week" ? 7 : 1))}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
+                if (viewMode === "month") setSelectedDate(subMonths(selectedDate, 1));
+                else setSelectedDate(subDays(selectedDate, viewMode === "week" ? 7 : 1));
+              }}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -813,7 +827,9 @@ export default function AgendaOperational() {
                     <CalendarIcon className="h-3.5 w-3.5" />
                     {viewMode === "week"
                       ? `${format(weekStart, "dd/MM")} — ${format(weekEnd, "dd/MM/yyyy")}`
-                      : format(selectedDate, "dd/MM/yyyy (EEE)", { locale: ptBR })
+                      : viewMode === "month"
+                        ? format(selectedDate, "MMMM 'de' yyyy", { locale: ptBR })
+                        : format(selectedDate, "dd/MM/yyyy (EEE)", { locale: ptBR })
                     }
                   </Button>
                 </PopoverTrigger>
@@ -821,7 +837,10 @@ export default function AgendaOperational() {
                   <Calendar mode="single" selected={selectedDate} onSelect={d => { if (d) { setSelectedDate(d); setCalendarOpen(false); } }} locale={ptBR} className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setSelectedDate(addDays(selectedDate, viewMode === "week" ? 7 : 1))}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
+                if (viewMode === "month") setSelectedDate(addMonths(selectedDate, 1));
+                else setSelectedDate(addDays(selectedDate, viewMode === "week" ? 7 : 1));
+              }}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setSelectedDate(new Date())}>Hoje</Button>
@@ -887,8 +906,9 @@ export default function AgendaOperational() {
                 { value: "list" as const, icon: List, label: "Lista" },
                 { value: "day" as const, icon: LayoutGrid, label: "Dia" },
                 { value: "week" as const, icon: CalendarIcon, label: "Semana" },
-              ].map(({ value, icon: Icon }) => (
-                <Button key={value} variant={viewMode === value ? "default" : "ghost"} size="icon" className="h-8 w-8 rounded-none" onClick={() => setViewMode(value)}>
+                { value: "month" as const, icon: CalendarDays, label: "Mês" },
+              ].map(({ value, icon: Icon, label }) => (
+                <Button key={value} variant={viewMode === value ? "default" : "ghost"} size="icon" className="h-8 w-8 rounded-none" onClick={() => setViewMode(value)} title={label}>
                   <Icon className="h-3.5 w-3.5" />
                 </Button>
               ))}
@@ -940,7 +960,7 @@ export default function AgendaOperational() {
 
       {/* Main content */}
       <div className="flex gap-4">
-        <div className={cn("flex-1 min-w-0", selectedAppt && viewMode !== "week" && "max-w-[calc(100%-340px)]")}>
+        <div className={cn("flex-1 min-w-0", selectedAppt && viewMode !== "week" && viewMode !== "month" && "max-w-[calc(100%-340px)]")}>
           {isLoading ? (
             <div className="flex items-center justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
           ) : viewMode === "list" ? (
@@ -957,6 +977,71 @@ export default function AgendaOperational() {
             </div>
           ) : viewMode === "day" ? (
             renderMultiAgendaDay()
+          ) : viewMode === "month" ? (
+            /* Month view */
+            <Card>
+              <CardContent className="p-0 overflow-hidden">
+                <div className="grid grid-cols-7 border-b bg-muted/30">
+                  {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(d => (
+                    <div key={d} className="px-2 py-2 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wide border-r last:border-r-0">{d}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 auto-rows-fr">
+                  {monthDays.map((day, idx) => {
+                    const inMonth = isSameMonth(day, selectedDate);
+                    const isToday = isSameDay(day, new Date());
+                    const dayAppts = filteredAppointments?.filter(a => isSameDay(parseLocalTime(a.scheduled_at), day))
+                      .sort((a, b) => parseLocalTime(a.scheduled_at).getTime() - parseLocalTime(b.scheduled_at).getTime()) || [];
+                    const maxShow = 3;
+                    const extra = dayAppts.length - maxShow;
+                    return (
+                      <div
+                        key={day.toISOString()}
+                        className={cn(
+                          "min-h-[110px] border-r border-b last:border-r-0 p-1.5 flex flex-col gap-1 cursor-pointer hover:bg-muted/40 transition-colors",
+                          !inMonth && "bg-muted/20 text-muted-foreground/60",
+                          isToday && "bg-primary/5",
+                          (idx + 1) % 7 === 0 && "border-r-0",
+                        )}
+                        onClick={() => { setSelectedDate(day); setViewMode("day"); }}
+                        onDoubleClick={(e) => { e.stopPropagation(); openNewAppointment(format(day, "yyyy-MM-dd"), "08:00"); }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={cn(
+                            "text-xs font-semibold tabular-nums",
+                            isToday && "inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary text-primary-foreground",
+                          )}>{format(day, "d")}</span>
+                          {dayAppts.length > 0 && (
+                            <Badge variant="secondary" className="h-4 px-1.5 text-[9px] font-medium">{dayAppts.length}</Badge>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-0.5 overflow-hidden">
+                          {dayAppts.slice(0, maxShow).map(a => {
+                            const sc = statusConfig[a.status] || statusConfig.agendado;
+                            const agColor = getAgendaColor((a as any).agenda_id);
+                            return (
+                              <div
+                                key={a.id}
+                                className={cn("text-[10px] px-1 py-0.5 rounded truncate flex items-center gap-1", sc.color)}
+                                style={{ borderLeft: `2px solid ${agColor}` }}
+                                onClick={(e) => { e.stopPropagation(); setSelectedAppt(a); }}
+                                title={`${formatTime(a.scheduled_at)} ${a.patients?.full_name || a.title}`}
+                              >
+                                <span className="font-mono font-semibold shrink-0">{formatTime(a.scheduled_at)}</span>
+                                <span className="truncate">{a.patients?.full_name || (a as any).provisional_name || a.title}</span>
+                              </div>
+                            );
+                          })}
+                          {extra > 0 && (
+                            <div className="text-[9px] text-muted-foreground font-medium px-1">+{extra} mais</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           ) : (
             /* Week view */
             <Card>
@@ -1007,15 +1092,15 @@ export default function AgendaOperational() {
         </div>
 
         {/* Detail panel */}
-        {selectedAppt && viewMode !== "week" && (
+        {selectedAppt && viewMode !== "week" && viewMode !== "month" && (
           <Card className="w-[320px] shrink-0 sticky top-20 self-start max-h-[calc(100vh-120px)] overflow-hidden flex flex-col">
             {renderDetailPanel()}
           </Card>
         )}
       </div>
 
-      {/* Week view detail dialog */}
-      {selectedAppt && viewMode === "week" && (
+      {/* Week/Month view detail dialog */}
+      {selectedAppt && (viewMode === "week" || viewMode === "month") && (
         <Dialog open={!!selectedAppt} onOpenChange={(open) => { if (!open) setSelectedAppt(null); }}>
           <DialogContent className="max-w-md p-0 overflow-hidden">
             <div className="max-h-[70vh] overflow-y-auto">
