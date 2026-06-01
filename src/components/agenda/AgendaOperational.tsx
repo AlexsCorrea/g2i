@@ -1092,15 +1092,15 @@ export default function AgendaOperational() {
         </div>
 
         {/* Detail panel */}
-        {selectedAppt && viewMode !== "week" && (
+        {selectedAppt && viewMode !== "week" && viewMode !== "month" && (
           <Card className="w-[320px] shrink-0 sticky top-20 self-start max-h-[calc(100vh-120px)] overflow-hidden flex flex-col">
             {renderDetailPanel()}
           </Card>
         )}
       </div>
 
-      {/* Week view detail dialog */}
-      {selectedAppt && viewMode === "week" && (
+      {/* Week/Month view detail dialog */}
+      {selectedAppt && (viewMode === "week" || viewMode === "month") && (
         <Dialog open={!!selectedAppt} onOpenChange={(open) => { if (!open) setSelectedAppt(null); }}>
           <DialogContent className="max-w-md p-0 overflow-hidden">
             <div className="max-h-[70vh] overflow-y-auto">
