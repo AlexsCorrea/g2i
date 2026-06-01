@@ -960,7 +960,7 @@ export default function AgendaOperational() {
 
       {/* Main content */}
       <div className="flex gap-4">
-        <div className={cn("flex-1 min-w-0", selectedAppt && viewMode !== "week" && "max-w-[calc(100%-340px)]")}>
+        <div className={cn("flex-1 min-w-0", selectedAppt && viewMode !== "week" && viewMode !== "month" && "max-w-[calc(100%-340px)]")}>
           {isLoading ? (
             <div className="flex items-center justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
           ) : viewMode === "list" ? (
