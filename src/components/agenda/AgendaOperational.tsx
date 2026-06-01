@@ -906,8 +906,9 @@ export default function AgendaOperational() {
                 { value: "list" as const, icon: List, label: "Lista" },
                 { value: "day" as const, icon: LayoutGrid, label: "Dia" },
                 { value: "week" as const, icon: CalendarIcon, label: "Semana" },
-              ].map(({ value, icon: Icon }) => (
-                <Button key={value} variant={viewMode === value ? "default" : "ghost"} size="icon" className="h-8 w-8 rounded-none" onClick={() => setViewMode(value)}>
+                { value: "month" as const, icon: CalendarDays, label: "Mês" },
+              ].map(({ value, icon: Icon, label }) => (
+                <Button key={value} variant={viewMode === value ? "default" : "ghost"} size="icon" className="h-8 w-8 rounded-none" onClick={() => setViewMode(value)} title={label}>
                   <Icon className="h-3.5 w-3.5" />
                 </Button>
               ))}
