@@ -108,9 +108,14 @@ export default function AgendaOperational() {
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+  const monthStart = startOfMonth(selectedDate);
+  const monthEnd = endOfMonth(selectedDate);
+  const monthGridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const monthGridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  const monthDays = eachDayOfInterval({ start: monthGridStart, end: monthGridEnd });
 
-  const { data: dayAppointments, isLoading } = useAppointments({ date: viewMode === "week" ? undefined : dateStr });
-  const { data: weekAppointments } = useAppointments(viewMode === "week" ? {} : undefined);
+  const { data: dayAppointments, isLoading } = useAppointments({ date: (viewMode === "week" || viewMode === "month") ? undefined : dateStr });
+  const { data: weekAppointments } = useAppointments((viewMode === "week" || viewMode === "month") ? {} : undefined);
   const { data: agendas } = useScheduleAgendas();
   const { data: allPeriods } = useSchedulePeriods();
   const { data: allBlocks } = useScheduleBlocks();
