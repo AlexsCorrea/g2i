@@ -75,7 +75,7 @@ export default function AgendaOperational() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [viewMode, setViewMode] = useState<"list" | "day" | "week">("day");
+  const [viewMode, setViewMode] = useState<"list" | "day" | "week" | "month">("day");
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
