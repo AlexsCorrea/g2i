@@ -1019,14 +1019,22 @@ export default function AgendaOperational() {
                           {dayAppts.slice(0, maxShow).map(a => {
                             const sc = statusConfig[a.status] || statusConfig.agendado;
                             const agColor = getAgendaColor((a as any).agenda_id);
+                            const ag = agendas?.find(x => x.id === (a as any).agenda_id);
+                            const agLabel = ag?.name || "—";
                             return (
                               <div
                                 key={a.id}
-                                className={cn("text-[10px] px-1 py-0.5 rounded truncate flex items-center gap-1", sc.color)}
-                                style={{ borderLeft: `2px solid ${agColor}` }}
+                                className="text-[10px] pl-1.5 pr-1 py-0.5 rounded-sm truncate flex items-center gap-1 border hover:brightness-95 transition"
+                                style={{
+                                  backgroundColor: `${agColor}22`,
+                                  borderColor: `${agColor}55`,
+                                  borderLeft: `3px solid ${agColor}`,
+                                  color: "hsl(var(--foreground))",
+                                }}
                                 onClick={(e) => { e.stopPropagation(); setSelectedAppt(a); }}
-                                title={`${formatTime(a.scheduled_at)} ${a.patients?.full_name || a.title}`}
+                                title={`${formatTime(a.scheduled_at)} · ${agLabel} · ${a.patients?.full_name || a.title} (${sc.label})`}
                               >
+                                <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", sc.dot)} />
                                 <span className="font-mono font-semibold shrink-0">{formatTime(a.scheduled_at)}</span>
                                 <span className="truncate">{a.patients?.full_name || (a as any).provisional_name || a.title}</span>
                               </div>
@@ -1035,6 +1043,17 @@ export default function AgendaOperational() {
                           {extra > 0 && (
                             <div className="text-[9px] text-muted-foreground font-medium px-1">+{extra} mais</div>
                           )}
+                          {dayAppts.length > 0 && (() => {
+                            const uniqueAgs = Array.from(new Set(dayAppts.map(a => (a as any).agenda_id).filter(Boolean)));
+                            if (uniqueAgs.length <= 1) return null;
+                            return (
+                              <div className="flex items-center gap-0.5 pt-0.5">
+                                {uniqueAgs.slice(0, 6).map(id => (
+                                  <span key={id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: getAgendaColor(id) }} />
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     );
