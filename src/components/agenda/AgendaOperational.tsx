@@ -24,8 +24,9 @@ import {
   FileText, CheckCircle, UserCheck, Edit, Phone, X,
   Ban, RotateCcw, PlayCircle, DoorOpen, Eye, Filter, AlertTriangle, Lock, Users, GripVertical
 } from "lucide-react";
-import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
+import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isHourAvailable, isTimeAvailable } from "@/lib/agendaAvailability";
 import { toast } from "sonner";
