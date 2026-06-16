@@ -4385,65 +4385,116 @@ export type Database = {
       lab_equipment: {
         Row: {
           active: boolean | null
+          analytes: string[] | null
+          baud_rate: number | null
+          connection_status: string | null
           connection_type: string | null
           created_at: string
+          current_situation: string | null
+          current_system: string | null
+          data_bits: number | null
+          direction: string | null
+          equipment_type: string | null
+          file_directory: string | null
+          handshake: string | null
+          homolog_status: string | null
           host: string | null
           id: string
           interface_code: string | null
+          last_communication_at: string | null
+          last_message_at: string | null
           manufacturer: string | null
           message_format: string | null
           model: string | null
           name: string
           notes: string | null
+          parity: string | null
           parsing_rules: Json | null
           port: number | null
           protocol: string | null
           responsible: string | null
+          sector: string | null
           sector_id: string | null
           serial_number: string | null
+          serial_port: string | null
           status: string
+          stop_bits: number | null
           updated_at: string
         }
         Insert: {
           active?: boolean | null
+          analytes?: string[] | null
+          baud_rate?: number | null
+          connection_status?: string | null
           connection_type?: string | null
           created_at?: string
+          current_situation?: string | null
+          current_system?: string | null
+          data_bits?: number | null
+          direction?: string | null
+          equipment_type?: string | null
+          file_directory?: string | null
+          handshake?: string | null
+          homolog_status?: string | null
           host?: string | null
           id?: string
           interface_code?: string | null
+          last_communication_at?: string | null
+          last_message_at?: string | null
           manufacturer?: string | null
           message_format?: string | null
           model?: string | null
           name: string
           notes?: string | null
+          parity?: string | null
           parsing_rules?: Json | null
           port?: number | null
           protocol?: string | null
           responsible?: string | null
+          sector?: string | null
           sector_id?: string | null
           serial_number?: string | null
+          serial_port?: string | null
           status?: string
+          stop_bits?: number | null
           updated_at?: string
         }
         Update: {
           active?: boolean | null
+          analytes?: string[] | null
+          baud_rate?: number | null
+          connection_status?: string | null
           connection_type?: string | null
           created_at?: string
+          current_situation?: string | null
+          current_system?: string | null
+          data_bits?: number | null
+          direction?: string | null
+          equipment_type?: string | null
+          file_directory?: string | null
+          handshake?: string | null
+          homolog_status?: string | null
           host?: string | null
           id?: string
           interface_code?: string | null
+          last_communication_at?: string | null
+          last_message_at?: string | null
           manufacturer?: string | null
           message_format?: string | null
           model?: string | null
           name?: string
           notes?: string | null
+          parity?: string | null
           parsing_rules?: Json | null
           port?: number | null
           protocol?: string | null
           responsible?: string | null
+          sector?: string | null
           sector_id?: string | null
           serial_number?: string | null
+          serial_port?: string | null
           status?: string
+          stop_bits?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -4452,6 +4503,195 @@ export type Database = {
             columns: ["sector_id"]
             isOneToOne: false
             referencedRelation: "lab_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lab_equipment_agents: {
+        Row: {
+          active: boolean
+          agent_version: string | null
+          created_at: string
+          equipment_id: string | null
+          host_machine: string | null
+          id: string
+          last_seen_at: string | null
+          name: string
+          notes: string | null
+          os_info: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          agent_version?: string | null
+          created_at?: string
+          equipment_id?: string | null
+          host_machine?: string | null
+          id?: string
+          last_seen_at?: string | null
+          name: string
+          notes?: string | null
+          os_info?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          agent_version?: string | null
+          created_at?: string
+          equipment_id?: string | null
+          host_machine?: string | null
+          id?: string
+          last_seen_at?: string | null
+          name?: string
+          notes?: string | null
+          os_info?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_equipment_agents_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "lab_equipment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lab_equipment_analyte_map: {
+        Row: {
+          active: boolean
+          analyte_name: string
+          component_id: string | null
+          created_at: string
+          decimal_places: number | null
+          equipment_code: string
+          equipment_id: string
+          exam_id: string | null
+          id: string
+          multiplier: number | null
+          notes: string | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          analyte_name: string
+          component_id?: string | null
+          created_at?: string
+          decimal_places?: number | null
+          equipment_code: string
+          equipment_id: string
+          exam_id?: string | null
+          id?: string
+          multiplier?: number | null
+          notes?: string | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          analyte_name?: string
+          component_id?: string | null
+          created_at?: string
+          decimal_places?: number | null
+          equipment_code?: string
+          equipment_id?: string
+          exam_id?: string | null
+          id?: string
+          multiplier?: number | null
+          notes?: string | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_equipment_analyte_map_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "lab_exam_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_equipment_analyte_map_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "lab_equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_equipment_analyte_map_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "lab_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lab_equipment_messages: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          direction: string
+          equipment_id: string | null
+          id: string
+          parse_error: string | null
+          parsed_payload: Json | null
+          processed_at: string | null
+          protocol: string | null
+          raw_payload: string
+          received_at: string
+          reprocessed_count: number
+          sample_barcode: string | null
+          status: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          direction?: string
+          equipment_id?: string | null
+          id?: string
+          parse_error?: string | null
+          parsed_payload?: Json | null
+          processed_at?: string | null
+          protocol?: string | null
+          raw_payload: string
+          received_at?: string
+          reprocessed_count?: number
+          sample_barcode?: string | null
+          status?: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          direction?: string
+          equipment_id?: string | null
+          id?: string
+          parse_error?: string | null
+          parsed_payload?: Json | null
+          processed_at?: string | null
+          protocol?: string | null
+          raw_payload?: string
+          received_at?: string
+          reprocessed_count?: number
+          sample_barcode?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_equipment_messages_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "lab_equipment_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_equipment_messages_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "lab_equipment"
             referencedColumns: ["id"]
           },
         ]
