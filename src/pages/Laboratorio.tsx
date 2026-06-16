@@ -33,6 +33,9 @@ import LabIntIssues from "@/components/laboratorio/LabIntIssues";
 import LabIntReports from "@/components/laboratorio/LabIntReports";
 import LabIntConfig from "@/components/laboratorio/LabIntConfig";
 import LabIntEquipment from "@/components/laboratorio/LabIntEquipment";
+import LabIntInterfacing from "@/components/laboratorio/LabIntInterfacing";
+import LabIntAnalyteMap from "@/components/laboratorio/LabIntAnalyteMap";
+import LabIntSimulator from "@/components/laboratorio/LabIntSimulator";
 import LabExtShipments from "@/components/laboratorio/LabExtShipments";
 import LabExtWorklist from "@/components/laboratorio/LabExtWorklist";
 import LabExtCriticals from "@/components/laboratorio/LabExtCriticals";
@@ -54,6 +57,10 @@ const mainTabs = [
   { value: "recollection", label: "Recoleta", icon: RefreshCw },
   { value: "reports", label: "Laudos", icon: FileText },
   { value: "interface", label: "Equipamentos", icon: Cable },
+  { value: "bench-equipment", label: "Equip. Bancada", icon: Cable },
+  { value: "interfacing", label: "Interfaceamento", icon: Activity },
+  { value: "analyte-map", label: "Mapeamento", icon: ArrowLeftRight },
+  { value: "simulator", label: "Simulador", icon: FlaskConical },
   { value: "pending", label: "Pendências", icon: Clock },
   { value: "module-reports", label: "Relatórios", icon: FileBarChart },
   { value: "settings", label: "Cadastros", icon: Settings2 },
@@ -140,6 +147,10 @@ export default function Laboratorio() {
           <TabsContent value="recollection"><LabRecollection /></TabsContent>
           <TabsContent value="reports"><LabReports /></TabsContent>
           <TabsContent value="interface"><LabInterface /></TabsContent>
+          <TabsContent value="bench-equipment"><LabIntEquipment /></TabsContent>
+          <TabsContent value="interfacing"><LabIntInterfacing /></TabsContent>
+          <TabsContent value="analyte-map"><LabIntAnalyteMap /></TabsContent>
+          <TabsContent value="simulator"><LabIntSimulator /></TabsContent>
           <TabsContent value="pending"><LabPending /></TabsContent>
           <TabsContent value="module-reports"><LabModuleReports /></TabsContent>
           <TabsContent value="settings"><LabSettings /></TabsContent>
