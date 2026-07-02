@@ -1,18 +1,22 @@
 import { useState, useCallback } from "react";
 import {
   Brain, Mic, FileText, Lightbulb, ClipboardList,
-  Sparkles, X, ChevronRight, Loader2, Copy, Check,
+  Sparkles, X, Loader2, Copy, Check, Save, Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 import { useClinicalAI } from "@/hooks/useClinicalAI";
+import { useCreateEvolutionNote } from "@/hooks/useEvolutionNotes";
+import { useAuth } from "@/contexts/AuthContext";
 import { VoiceTranscription, TranscriptEntry } from "./VoiceTranscription";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
 interface AIAssistantPanelProps {
+  patientId: string;
   patientContext: string;
   patientName: string;
   isOpen: boolean;
@@ -20,15 +24,19 @@ interface AIAssistantPanelProps {
 }
 
 export function AIAssistantPanel({
+  patientId,
   patientContext,
   patientName,
   isOpen,
   onClose,
 }: AIAssistantPanelProps) {
   const { callAI, isLoading, streamingText } = useClinicalAI({ patientContext });
+  const { profile } = useAuth();
+  const createNote = useCreateEvolutionNote();
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [activeTab, setActiveTab] = useState("transcricao");
   const [results, setResults] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState<string | null>(null);
 
   const getTranscriptText = useCallback(() => {
