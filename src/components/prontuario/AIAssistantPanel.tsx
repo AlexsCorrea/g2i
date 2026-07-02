@@ -260,12 +260,21 @@ export function AIAssistantPanel({
 
             {results[tab.action] && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <Badge variant="outline" className="text-[10px] gap-1 bg-primary/5">
                     <Sparkles className="h-3 w-3" />
                     Gerado por IA
                   </Badge>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 flex-wrap">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => setEditing((p) => ({ ...p, [tab.action]: !p[tab.action] }))}
+                    >
+                      <Pencil className="h-3 w-3" />
+                      {editing[tab.action] ? "Visualizar" : "Editar"}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -287,20 +296,44 @@ export function AIAssistantPanel({
                     </Button>
                   </div>
                 </div>
-                <ScrollArea className="max-h-[calc(100vh-260px)]">
-                  <div className="prose prose-sm max-w-none text-sm leading-relaxed">
-                    <ReactMarkdown>{results[tab.action]}</ReactMarkdown>
-                  </div>
-                </ScrollArea>
-                {tab.action === "evolution" && (
-                  <div className="pt-3 border-t border-border">
-                    <p className="text-[10px] text-muted-foreground mb-2">
-                      ⚠️ Este é um rascunho gerado por IA. Revise e edite antes de registrar.
+
+                {editing[tab.action] ? (
+                  <Textarea
+                    value={results[tab.action]}
+                    onChange={(e) => updateResult(tab.action, e.target.value)}
+                    className="min-h-[300px] text-sm font-mono"
+                  />
+                ) : (
+                  <ScrollArea className="max-h-[calc(100vh-320px)]">
+                    <div className="prose prose-sm max-w-none text-sm leading-relaxed">
+                      <ReactMarkdown>{results[tab.action]}</ReactMarkdown>
+                    </div>
+                  </ScrollArea>
+                )}
+
+                {(tab.action === "anamnesis" || tab.action === "evolution" || tab.action === "insights") && (
+                  <div className="pt-3 border-t border-border space-y-2">
+                    <p className="text-[10px] text-muted-foreground">
+                      ⚠️ Revise antes de registrar. O conteúdo será salvo como uma nova evolução no prontuário (imutável após registro).
                     </p>
+                    <Button
+                      onClick={() => registerInRecord(tab.action, tab.label)}
+                      disabled={createNote.isPending}
+                      className="w-full gap-2"
+                      size="sm"
+                    >
+                      {createNote.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
+                      Registrar no Prontuário
+                    </Button>
                   </div>
                 )}
               </div>
             )}
+
           </TabsContent>
         ))}
       </Tabs>
