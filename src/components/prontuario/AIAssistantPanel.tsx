@@ -1,18 +1,22 @@
 import { useState, useCallback } from "react";
 import {
   Brain, Mic, FileText, Lightbulb, ClipboardList,
-  Sparkles, X, ChevronRight, Loader2, Copy, Check,
+  Sparkles, X, Loader2, Copy, Check, Save, Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 import { useClinicalAI } from "@/hooks/useClinicalAI";
+import { useCreateEvolutionNote } from "@/hooks/useEvolutionNotes";
+import { useAuth } from "@/contexts/AuthContext";
 import { VoiceTranscription, TranscriptEntry } from "./VoiceTranscription";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
 interface AIAssistantPanelProps {
+  patientId: string;
   patientContext: string;
   patientName: string;
   isOpen: boolean;
@@ -20,15 +24,19 @@ interface AIAssistantPanelProps {
 }
 
 export function AIAssistantPanel({
+  patientId,
   patientContext,
   patientName,
   isOpen,
   onClose,
 }: AIAssistantPanelProps) {
   const { callAI, isLoading, streamingText } = useClinicalAI({ patientContext });
+  const { profile } = useAuth();
+  const createNote = useCreateEvolutionNote();
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [activeTab, setActiveTab] = useState("transcricao");
   const [results, setResults] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState<string | null>(null);
 
   const getTranscriptText = useCallback(() => {
@@ -73,6 +81,52 @@ export function AIAssistantPanel({
     setCopied(key);
     setTimeout(() => setCopied(null), 2000);
   };
+
+  const updateResult = (key: string, value: string) => {
+    setResults((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const registerInRecord = async (action: string, label: string) => {
+    if (!profile) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+    const content = results[action]?.trim();
+    if (!content) {
+      toast.error("Nada para registrar");
+      return;
+    }
+    const noteType = action === "anamnesis" || action === "evolution" ? "medica" : "medica";
+    const header = action === "anamnesis"
+      ? "ANAMNESE (assistida por IA)"
+      : action === "evolution"
+      ? "EVOLUÇÃO SOAP (assistida por IA)"
+      : `${label.toUpperCase()} (assistida por IA)`;
+    const transcriptText = getTranscriptText();
+    const finalContent = [
+      header,
+      "",
+      content,
+      transcriptText ? "\n---\nTRANSCRIÇÃO DA CONSULTA:\n" + transcriptText : "",
+    ].join("\n");
+
+    try {
+      await createNote.mutateAsync({
+        patient_id: patientId,
+        professional_id: profile.id,
+        note_type: noteType,
+        content: finalContent,
+        subjective: null,
+        objective: null,
+        assessment: null,
+        plan: null,
+      });
+      setEditing((prev) => ({ ...prev, [action]: false }));
+    } catch {
+      // toast handled in hook
+    }
+  };
+
 
   if (!isOpen) return null;
 
@@ -206,12 +260,21 @@ export function AIAssistantPanel({
 
             {results[tab.action] && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <Badge variant="outline" className="text-[10px] gap-1 bg-primary/5">
                     <Sparkles className="h-3 w-3" />
                     Gerado por IA
                   </Badge>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 flex-wrap">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => setEditing((p) => ({ ...p, [tab.action]: !p[tab.action] }))}
+                    >
+                      <Pencil className="h-3 w-3" />
+                      {editing[tab.action] ? "Visualizar" : "Editar"}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -233,20 +296,44 @@ export function AIAssistantPanel({
                     </Button>
                   </div>
                 </div>
-                <ScrollArea className="max-h-[calc(100vh-260px)]">
-                  <div className="prose prose-sm max-w-none text-sm leading-relaxed">
-                    <ReactMarkdown>{results[tab.action]}</ReactMarkdown>
-                  </div>
-                </ScrollArea>
-                {tab.action === "evolution" && (
-                  <div className="pt-3 border-t border-border">
-                    <p className="text-[10px] text-muted-foreground mb-2">
-                      ⚠️ Este é um rascunho gerado por IA. Revise e edite antes de registrar.
+
+                {editing[tab.action] ? (
+                  <Textarea
+                    value={results[tab.action]}
+                    onChange={(e) => updateResult(tab.action, e.target.value)}
+                    className="min-h-[300px] text-sm font-mono"
+                  />
+                ) : (
+                  <ScrollArea className="max-h-[calc(100vh-320px)]">
+                    <div className="prose prose-sm max-w-none text-sm leading-relaxed">
+                      <ReactMarkdown>{results[tab.action]}</ReactMarkdown>
+                    </div>
+                  </ScrollArea>
+                )}
+
+                {(tab.action === "anamnesis" || tab.action === "evolution" || tab.action === "insights") && (
+                  <div className="pt-3 border-t border-border space-y-2">
+                    <p className="text-[10px] text-muted-foreground">
+                      ⚠️ Revise antes de registrar. O conteúdo será salvo como uma nova evolução no prontuário (imutável após registro).
                     </p>
+                    <Button
+                      onClick={() => registerInRecord(tab.action, tab.label)}
+                      disabled={createNote.isPending}
+                      className="w-full gap-2"
+                      size="sm"
+                    >
+                      {createNote.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
+                      Registrar no Prontuário
+                    </Button>
                   </div>
                 )}
               </div>
             )}
+
           </TabsContent>
         ))}
       </Tabs>
