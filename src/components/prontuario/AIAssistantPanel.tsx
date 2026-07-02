@@ -82,6 +82,52 @@ export function AIAssistantPanel({
     setTimeout(() => setCopied(null), 2000);
   };
 
+  const updateResult = (key: string, value: string) => {
+    setResults((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const registerInRecord = async (action: string, label: string) => {
+    if (!profile) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+    const content = results[action]?.trim();
+    if (!content) {
+      toast.error("Nada para registrar");
+      return;
+    }
+    const noteType = action === "anamnesis" || action === "evolution" ? "medica" : "medica";
+    const header = action === "anamnesis"
+      ? "ANAMNESE (assistida por IA)"
+      : action === "evolution"
+      ? "EVOLUÇÃO SOAP (assistida por IA)"
+      : `${label.toUpperCase()} (assistida por IA)`;
+    const transcriptText = getTranscriptText();
+    const finalContent = [
+      header,
+      "",
+      content,
+      transcriptText ? "\n---\nTRANSCRIÇÃO DA CONSULTA:\n" + transcriptText : "",
+    ].join("\n");
+
+    try {
+      await createNote.mutateAsync({
+        patient_id: patientId,
+        professional_id: profile.id,
+        note_type: noteType,
+        content: finalContent,
+        subjective: null,
+        objective: null,
+        assessment: null,
+        plan: null,
+      });
+      setEditing((prev) => ({ ...prev, [action]: false }));
+    } catch {
+      // toast handled in hook
+    }
+  };
+
+
   if (!isOpen) return null;
 
   return (
