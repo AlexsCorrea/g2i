@@ -1222,7 +1222,7 @@ export default function Prontuario() {
 
       <AIChatButton patientContext={patientContext} />
       <button onClick={() => setShowAIPanel(true)} className="fixed bottom-6 right-24 z-50 w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-accent text-accent-foreground hover:scale-105 transition-all" title="Assistente IA Clínico"><Brain className="h-5 w-5" /></button>
-      <AIAssistantPanel patientContext={patientContextString} patientName={patient.full_name} isOpen={showAIPanel} onClose={() => setShowAIPanel(false)} />
+      <AIAssistantPanel patientId={patient.id} patientContext={patientContextString} patientName={patient.full_name} isOpen={showAIPanel} onClose={() => setShowAIPanel(false)} />
 
       {id && (
         <>
