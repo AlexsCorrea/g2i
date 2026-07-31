@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { ArrowLeft, Search, CheckCircle2, AlertCircle, UserPlus, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGenerateTicket } from "@/hooks/useQueueTickets";
+import { callPublicQueue } from "@/lib/publicQueueApi";
+
 import { DateMaskInput } from "@/components/ui/date-mask-input";
 import type { KioskResultData } from "@/pages/Kiosk";
 
@@ -76,90 +78,24 @@ export function KioskCheckin({ onBack, onResult }: Props) {
     setLoading(true);
 
     try {
-      const now = new Date();
-      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-      const todayStart = new Date(`${today}T00:00:00`).toISOString();
-      const todayEnd = new Date(`${today}T23:59:59`).toISOString();
-      const foundAppointments: FoundAppointment[] = [];
-
-      // === PATH 1: Search registered patients by CPF (masked or unmasked) ===
-      const maskedCpf = cleanCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-      const { data: patients, error: pErr } = await supabase
-        .from("patients")
-        .select("id, full_name, birth_date, phone, health_insurance, health_insurance_number, updated_at")
-        .or(`cpf.eq.${cleanCpf},cpf.eq.${maskedCpf}`);
-      if (pErr) throw pErr;
-
-      console.log("[check-in] CPF search:", { cleanCpf, maskedCpf, today, birthDate, patientsFound: patients?.length });
-
-      const matchedPatient = patients?.find((p: any) => p.birth_date === birthDate);
+      // Identity is validated server-side (CPF + birth date) — no anonymous DB access.
+      const res = await callPublicQueue<{ patient: PatientInfo | null; appointments: FoundAppointment[] }>(
+        "search_checkin",
+        { cpf: cleanCpf, birth_date: birthDate },
+      );
+      const matchedPatient = res.patient;
+      const foundAppointments = res.appointments || [];
 
       if (matchedPatient) {
-        setPatient(matchedPatient as PatientInfo);
-
-        // Check if cadastral update is needed
-        if (!matchedPatient.phone || isOutdated(matchedPatient.updated_at)) {
+        setPatient(matchedPatient);
+        if (!matchedPatient.phone || isOutdated((matchedPatient as any).updated_at)) {
           setUpdateFields({
             phone: matchedPatient.phone || "",
             insurance: (matchedPatient as any).health_insurance || "",
             insurance_number: (matchedPatient as any).health_insurance_number || "",
           });
         }
-
-        // Find appointments for this patient today
-        const { data: appts, error: aErr } = await supabase
-          .from("appointments")
-          .select("*, profiles(full_name)")
-          .eq("patient_id", matchedPatient.id)
-          .gte("scheduled_at", todayStart)
-          .lte("scheduled_at", todayEnd)
-          .not("status", "in", `(${EXCLUDED_STATUSES.join(",")})`);
-        if (aErr) throw aErr;
-        console.log("[check-in] Appointments for patient:", { patientId: matchedPatient.id, count: appts?.length, statuses: appts?.map((a: any) => a.status) });
-        (appts || []).forEach((a: any) => {
-          foundAppointments.push({
-            id: a.id,
-            title: a.title,
-            scheduled_at: a.scheduled_at,
-            appointment_type: a.appointment_type,
-            status: a.status,
-            location: a.location,
-            patient_id: matchedPatient.id,
-            patient_name: matchedPatient.full_name,
-            professional_name: a.profiles?.full_name || null,
-            is_provisional: false,
-          });
-        });
       }
-
-      // === PATH 2: Search provisional appointments (no patient_id) ===
-      const { data: provAppts, error: provErr } = await supabase
-        .from("appointments")
-        .select("*, profiles(full_name)")
-        .is("patient_id", null)
-        .eq("provisional_birth_date", birthDate)
-        .gte("scheduled_at", todayStart)
-        .lte("scheduled_at", todayEnd)
-        .not("status", "in", `(${EXCLUDED_STATUSES.join(",")})`);
-      if (provErr) throw provErr;
-
-      (provAppts || []).forEach((a: any) => {
-        // Avoid duplicates if already found via patient path
-        if (!foundAppointments.some(fa => fa.id === a.id)) {
-          foundAppointments.push({
-            id: a.id,
-            title: a.title,
-            scheduled_at: a.scheduled_at,
-            appointment_type: a.appointment_type,
-            status: a.status,
-            location: a.location,
-            patient_id: null,
-            patient_name: a.provisional_name || "Paciente provisório",
-            professional_name: a.profiles?.full_name || null,
-            is_provisional: true,
-          });
-        }
-      });
 
       if (foundAppointments.length === 0) {
         setError("Nenhum agendamento encontrado para hoje com os dados informados.");
@@ -170,7 +106,7 @@ export function KioskCheckin({ onBack, onResult }: Props) {
       setAppointments(foundAppointments);
 
       // If registered patient needs update, go to update step first
-      if (matchedPatient && (!matchedPatient.phone || isOutdated(matchedPatient.updated_at))) {
+      if (matchedPatient && (!matchedPatient.phone || isOutdated((matchedPatient as any).updated_at))) {
         setStep("update");
       } else {
         setStep("confirm");
@@ -188,11 +124,13 @@ export function KioskCheckin({ onBack, onResult }: Props) {
     setLoading(true);
     setError("");
     try {
-      await supabase.from("patients").update({
+      await callPublicQueue("update_contact", {
+        cpf: cpf.replace(/\D/g, ""),
+        birth_date: birthDate,
         phone: updateFields.phone,
-        health_insurance: updateFields.insurance || null,
-        health_insurance_number: updateFields.insurance_number || null,
-      }).eq("id", patient.id);
+        insurance: updateFields.insurance,
+        insurance_number: updateFields.insurance_number,
+      });
       setStep("confirm");
     } catch (err: any) { setError(err.message); } finally { setLoading(false); }
   };
@@ -219,15 +157,15 @@ export function KioskCheckin({ onBack, onResult }: Props) {
     setLoading(true);
     setError("");
     try {
-      await supabase.from("appointments").update({ status: "confirmado" }).eq("id", appt.id);
-      const ticket = await generateTicket.mutateAsync({
-        patient_id: appt.patient_id || undefined,
+      const res = await callPublicQueue<{ ticket: any }>("confirm_checkin", {
+        cpf: cpf.replace(/\D/g, ""),
+        birth_date: birthDate,
         appointment_id: appt.id,
         ticket_type: "consulta",
         queue_name: "recepcao",
         source: "totem",
-        checkin_data: { checkin_at: new Date().toISOString(), source: "totem", appointment_type: appt.appointment_type },
-      } as any);
+      });
+      const ticket = res.ticket;
       onResult({
         ticketNumber: ticket.ticket_number,
         ticketType: "consulta",
@@ -248,28 +186,19 @@ export function KioskCheckin({ onBack, onResult }: Props) {
     setError("");
 
     try {
-      // Create patient record
-      const { data: newPatient, error: cErr } = await supabase.from("patients").insert({
-        full_name: regFields.name,
-        birth_date: regFields.birth_date,
+      const res = await callPublicQueue<{ patient: { id: string; full_name: string } }>("complete_registration", {
         cpf: regFields.cpf,
-        phone: regFields.phone || null,
-        health_insurance: regFields.insurance || null,
-        gender: "nao_informado",
-      }).select("id, full_name").single();
-      if (cErr) throw cErr;
-
-      // Link appointment to new patient
-      await supabase.from("appointments").update({
-        patient_id: newPatient.id,
-        provisional_name: null,
-        provisional_birth_date: null,
-      }).eq("id", selectedAppt.id);
+        birth_date: regFields.birth_date,
+        appointment_id: selectedAppt.id,
+        name: regFields.name,
+        phone: regFields.phone,
+        insurance: regFields.insurance,
+      });
 
       const updatedAppt: FoundAppointment = {
         ...selectedAppt,
-        patient_id: newPatient.id,
-        patient_name: newPatient.full_name,
+        patient_id: res.patient.id,
+        patient_name: res.patient.full_name,
         is_provisional: false,
       };
 
@@ -279,6 +208,7 @@ export function KioskCheckin({ onBack, onResult }: Props) {
       setLoading(false);
     }
   };
+
 
   const handleSkipRegistration = async () => {
     if (!selectedAppt) return;

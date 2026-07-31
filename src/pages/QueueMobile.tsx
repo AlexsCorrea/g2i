@@ -103,7 +103,7 @@ export default function QueueMobile() {
 
   const generateTicket = useGenerateTicket();
   const { data: myTicket } = useQueueTicketById(ticketId);
-  const { data: allTickets } = useQueueTickets({ queue_name: "recepcao", status: "aguardando" });
+  const { data: allTickets } = useQueueTickets({ queue_name: "recepcao", status: "aguardando" }, { publicMode: true });
 
   useEffect(() => {
     if (ticketId && myTicket) setStep("tracking");

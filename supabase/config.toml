@@ -1,1 +1,4 @@
 project_id = "ivlhlaykjssdtnhighzb"
+
+[functions.queue-public]
+verify_jwt = false

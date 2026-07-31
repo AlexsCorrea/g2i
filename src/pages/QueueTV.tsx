@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { callPublicQueue } from "@/lib/publicQueueApi";
+
 import {
   useUnitConfig, useUnitAds, formatPatientDisplay,
   getPatientNameForSpeech, ticketToSpeech, priorityToSpeech,
@@ -99,69 +101,41 @@ export default function QueueTV() {
   // Load voices early
   useEffect(() => { window.speechSynthesis?.getVoices(); }, []);
 
-  // ---- REALTIME: only react to real operator events ----
+  // ---- PUBLIC POLLING: TV panel reads through the guarded public endpoint ----
   useEffect(() => {
-    const channel = supabase
-      .channel("tv-panel-realtime")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "queue_tickets" },
-        (payload) => {
-          const row = payload.new as any;
-          // Only enqueue when status just became "chamada"
-          if (row.status === "chamada" && row.called_at) {
-            // Fetch full ticket with patient data
-            supabase
-              .from("queue_tickets")
-              .select("*, patients(full_name, cpf, nome_social)")
-              .eq("id", row.id)
-              .single()
-              .then(({ data }) => {
-                if (!data) return;
-                const key = `${data.id}_${data.called_at}`;
-                setCallQueue((prev) => {
-                  // Avoid duplicate
-                  if (prev.some((c) => c.id === key)) return prev;
-                  return [...prev, { id: key, ticket: data, timestamp: new Date(data.called_at || Date.now()).getTime() }];
-                });
-              });
-          }
-      // Track any called/completed/absent for history
-          if (["chamada", "concluida", "ausente", "em_atendimento"].includes(row.status) && row.called_at) {
-            supabase
-              .from("queue_tickets")
-              .select("*, patients(full_name, cpf, nome_social)")
-              .eq("id", row.id)
-              .single()
-              .then(({ data }) => {
-                if (!data || !data.called_at) return;
-                setRecentHistory((prev) => {
-                  const filtered = prev.filter(t => t.id !== data.id);
-                  return [data, ...filtered].slice(0, 10);
-                });
-              });
-          }
+    let active = true;
+    const seen = new Set<string>();
+    let first = true;
+
+    const poll = async () => {
+      try {
+        const res = await callPublicQueue<{ tickets: any[] }>("tv_state");
+        if (!active) return;
+        const tickets = res.tickets || [];
+        setRecentHistory(tickets);
+
+        for (const t of [...tickets].reverse()) {
+          const key = `${t.id}_${t.called_at}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          // Don't announce the backlog present when the panel opened
+          if (first || t.status !== "chamada" || !t.called_at) continue;
+          setCallQueue((prev) => {
+            if (prev.some((c) => c.id === key)) return prev;
+            return [...prev, { id: key, ticket: t, timestamp: new Date(t.called_at).getTime() }];
+          });
         }
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+        first = false;
+      } catch {
+        /* keep last state on transient errors */
+      }
+    };
+
+    poll();
+    const interval = setInterval(poll, 3000);
+    return () => { active = false; clearInterval(interval); };
   }, []);
 
-  // Load initial history on mount
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    supabase
-      .from("queue_tickets")
-      .select("*, patients(full_name, cpf, nome_social)")
-      .in("status", ["chamada", "em_atendimento", "concluida", "ausente"])
-      .gte("created_at", `${today}T00:00:00`)
-      .not("called_at", "is", null)
-      .order("called_at", { ascending: false })
-      .limit(10)
-      .then(({ data }) => {
-        if (data) setRecentHistory(data);
-      });
-  }, []);
 
   // ---- LOCUTION ENGINE (queued) ----
   const processLocutionQueue = useCallback(() => {

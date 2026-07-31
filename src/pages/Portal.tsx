@@ -26,6 +26,8 @@ import { DateMaskInput } from "@/components/ui/date-mask-input";
 import { supabase } from "@/integrations/supabase/client";
 import { PriorityBadge } from "@/components/queue/PriorityBadge";
 import { useGenerateTicket, useQueueTicketById, useQueueTickets } from "@/hooks/useQueueTickets";
+import { callPublicQueue } from "@/lib/publicQueueApi";
+
 import { useUnitConfig } from "@/hooks/useUnitConfig";
 
 type NotifState = "active" | "denied" | "foreground_only" | "ios_no_pwa" | "not_configured";
@@ -196,7 +198,7 @@ export default function Portal() {
   const [showNotifWarning, setShowNotifWarning] = useState(false);
   const generateTicket = useGenerateTicket();
   const { data: myTicket } = useQueueTicketById(ticketId);
-  const { data: allTickets } = useQueueTickets({ queue_name: "recepcao", status: "aguardando" });
+  const { data: allTickets } = useQueueTickets({ queue_name: "recepcao", status: "aguardando" }, { publicMode: true });
   const { data: unitConfig } = useUnitConfig();
 
   // Auto-redirect to tracking if active ticket exists
@@ -260,17 +262,17 @@ export default function Portal() {
     return granted;
   };
 
-  // Load patient's today tickets
-  const loadTodayTickets = async (patientId: string) => {
-    const today = new Date().toISOString().split("T")[0];
-    const { data } = await supabase
-      .from("queue_tickets")
-      .select("*")
-      .eq("patient_id", patientId)
-      .gte("created_at", `${today}T00:00:00`)
-      .lte("created_at", `${today}T23:59:59`)
-      .order("created_at", { ascending: false });
-    setTodayTickets(data || []);
+  // Load patient's today tickets (server-side identity check)
+  const loadTodayTickets = async (cpfValue: string, birth: string) => {
+    try {
+      const res = await callPublicQueue<{ tickets: any[] }>("patient_tickets", {
+        cpf: cpfValue.replace(/\D/g, ""),
+        birth_date: birth,
+      });
+      setTodayTickets(res.tickets || []);
+    } catch {
+      setTodayTickets([]);
+    }
   };
 
   const doGenerateTicket = async (type: string) => {
@@ -280,7 +282,7 @@ export default function Portal() {
         queue_name: "recepcao",
         source: "celular",
         notification_enabled: notificationsEnabled,
-        patient_id: patientData?.id,
+        ...(patientData ? { patient_id: patientData.id, cpf: cpf.replace(/\D/g, ""), birth_date: birthDate } : {}),
       });
       setTicketId(ticket.id);
       localStorage.setItem("portal_ticket_id", ticket.id);
@@ -292,6 +294,7 @@ export default function Portal() {
       /* handled */
     }
   };
+
 
   const handleGenerateTicket = async (type: string) => {
     if (notifState === "active") {
@@ -360,22 +363,22 @@ export default function Portal() {
     }
     setLoading(true);
     try {
-      const { data: patients } = await supabase
-        .from("patients")
-        .select("id, full_name, birth_date, phone, health_insurance, health_insurance_number, updated_at")
-        .eq("cpf", cleanCpf);
-      const patient = patients?.find((p: any) => p.birth_date === birthDate);
+      const res = await callPublicQueue<{ patient: PatientData | null; appointments: any[] }>("search_checkin", {
+        cpf: cleanCpf,
+        birth_date: birthDate,
+      });
+      const patient = res.patient;
       if (!patient) {
         setError("Paciente não encontrado.");
         setLoading(false);
         return;
       }
 
-      setPatientData(patient as PatientData);
-      await loadTodayTickets(patient.id);
+      setPatientData(patient);
+      await loadTodayTickets(cleanCpf, birthDate);
 
       // Check if cadastral update needed
-      if (hasMissingCritical(patient as PatientData) || isOutdated(patient.updated_at)) {
+      if (hasMissingCritical(patient) || isOutdated(patient.updated_at)) {
         setUpdateFields({
           phone: patient.phone || "",
           insurance: (patient as any).health_insurance || "",
@@ -386,15 +389,8 @@ export default function Portal() {
         return;
       }
 
-      const today = new Date().toISOString().split("T")[0];
-      const { data: appts } = await supabase
-        .from("appointments")
-        .select("*, profiles(full_name)")
-        .eq("patient_id", patient.id)
-        .gte("scheduled_at", `${today}T00:00:00`)
-        .lte("scheduled_at", `${today}T23:59:59`)
-        .in("status", ["agendado", "confirmado"]);
-      if (!appts?.length) {
+      const appts = (res.appointments || []).filter((a: any) => ["agendado", "confirmado"].includes(a.status));
+      if (!appts.length) {
         setError("Nenhum agendamento encontrado para hoje.");
         setLoading(false);
         return;
@@ -405,9 +401,9 @@ export default function Portal() {
           title: a.title,
           scheduled_at: a.scheduled_at,
           appointment_type: a.appointment_type,
-          patient_id: patient.id,
-          patient_name: patient.full_name,
-          professional_name: a.profiles?.full_name || null,
+          patient_id: a.patient_id,
+          patient_name: a.patient_name,
+          professional_name: a.professional_name || null,
           location: a.location,
         })),
       );
@@ -428,24 +424,21 @@ export default function Portal() {
     setLoading(true);
     setError("");
     try {
-      await supabase
-        .from("patients")
-        .update({
-          phone: updateFields.phone,
-          health_insurance: updateFields.insurance || null,
-          health_insurance_number: updateFields.insurance_number || null,
-        })
-        .eq("id", patientData.id);
+      const cleanCpf = cpf.replace(/\D/g, "");
+      await callPublicQueue("update_contact", {
+        cpf: cleanCpf,
+        birth_date: birthDate,
+        phone: updateFields.phone,
+        insurance: updateFields.insurance,
+        insurance_number: updateFields.insurance_number,
+      });
 
-      const today = new Date().toISOString().split("T")[0];
-      const { data: appts } = await supabase
-        .from("appointments")
-        .select("*, profiles(full_name)")
-        .eq("patient_id", patientData.id)
-        .gte("scheduled_at", `${today}T00:00:00`)
-        .lte("scheduled_at", `${today}T23:59:59`)
-        .in("status", ["agendado", "confirmado"]);
-      if (!appts?.length) {
+      const res = await callPublicQueue<{ appointments: any[] }>("search_checkin", {
+        cpf: cleanCpf,
+        birth_date: birthDate,
+      });
+      const appts = (res.appointments || []).filter((a: any) => ["agendado", "confirmado"].includes(a.status));
+      if (!appts.length) {
         setError("Nenhum agendamento encontrado para hoje.");
         setLoading(false);
         return;
@@ -456,9 +449,9 @@ export default function Portal() {
           title: a.title,
           scheduled_at: a.scheduled_at,
           appointment_type: a.appointment_type,
-          patient_id: patientData.id,
-          patient_name: patientData.full_name,
-          professional_name: a.profiles?.full_name || null,
+          patient_id: a.patient_id,
+          patient_name: a.patient_name,
+          professional_name: a.professional_name || null,
           location: a.location,
         })),
       );
@@ -473,15 +466,15 @@ export default function Portal() {
   const handleConfirmCheckin = async (appt: FoundAppointment) => {
     setLoading(true);
     try {
-      await supabase.from("appointments").update({ status: "confirmado" }).eq("id", appt.id);
-      const ticket = await generateTicket.mutateAsync({
-        patient_id: appt.patient_id,
+      const res = await callPublicQueue<{ ticket: any }>("confirm_checkin", {
+        cpf: cpf.replace(/\D/g, ""),
+        birth_date: birthDate,
         appointment_id: appt.id,
         ticket_type: "consulta",
         queue_name: "recepcao",
         source: "celular",
-        checkin_data: { checkin_at: new Date().toISOString(), source: "mobile" },
       });
+      const ticket = res.ticket;
       setTicketId(ticket.id);
       localStorage.setItem("portal_ticket_id", ticket.id);
       localStorage.setItem("portal_ticket_date", new Date().toISOString().split("T")[0]);
@@ -497,6 +490,7 @@ export default function Portal() {
       setLoading(false);
     }
   };
+
 
   const resetAll = () => {
     localStorage.removeItem("portal_ticket_id");

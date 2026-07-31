@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getUserFriendlyError } from "@/lib/errorHandler";
+import { callPublicQueue } from "@/lib/publicQueueApi";
+
 
 export interface QueueTicket {
   id: string;
@@ -26,10 +28,21 @@ export interface QueueTicket {
   patients?: { full_name: string; cpf: string | null; nome_social: string | null } | null;
 }
 
-export function useQueueTickets(filters?: { queue_name?: string; status?: string; sector?: string }) {
+export function useQueueTickets(
+  filters?: { queue_name?: string; status?: string; sector?: string },
+  options?: { publicMode?: boolean },
+) {
   return useQuery({
-    queryKey: ["queue_tickets", filters],
+    queryKey: ["queue_tickets", filters, options?.publicMode ?? false],
     queryFn: async () => {
+      // Public surfaces (portal/totem) never read the table directly.
+      if (options?.publicMode) {
+        const res = await callPublicQueue<{ tickets: QueueTicket[] }>("waiting_list", {
+          queue_name: filters?.queue_name || "recepcao",
+        });
+        return res.tickets as QueueTicket[];
+      }
+
       let query = supabase
         .from("queue_tickets")
         .select("*, patients(full_name, cpf, nome_social)")
@@ -57,13 +70,8 @@ export function useQueueTicketById(ticketId: string | null) {
     queryKey: ["queue_ticket", ticketId],
     queryFn: async () => {
       if (!ticketId) return null;
-      const { data, error } = await supabase
-        .from("queue_tickets")
-        .select("*, patients(full_name, cpf, nome_social)")
-        .eq("id", ticketId)
-        .single();
-      if (error) throw error;
-      return data as QueueTicket;
+      const res = await callPublicQueue<{ ticket: QueueTicket }>("get_ticket", { ticket_id: ticketId });
+      return res.ticket as QueueTicket;
     },
     enabled: !!ticketId,
     refetchInterval: 5000,
@@ -76,7 +84,8 @@ export function useGenerateTicket() {
   return useMutation({
     mutationFn: async (params: {
       patient_id?: string;
-      appointment_id?: string;
+      cpf?: string;
+      birth_date?: string;
       ticket_type: string;
       queue_name: string;
       sector?: string;
@@ -89,70 +98,8 @@ export function useGenerateTicket() {
       unit_id?: string;
       device_id?: string;
     }) => {
-      const { priorityWeight } = await import("@/lib/queuePriority");
-      const priorityCode = params.priority_code || "normal";
-      const priority = params.priority ?? priorityWeight(priorityCode);
-      const prefix = params.prefix || legacyPrefixFromType(params.ticket_type);
-
-      const today = new Date().toISOString().split("T")[0];
-      const { data: existing } = await supabase
-        .from("queue_counters")
-        .select("*")
-        .eq("counter_date", today)
-        .eq("queue_name", params.queue_name)
-        .single();
-
-      let nextNumber: number;
-      if (existing) {
-        nextNumber = (existing as any).last_number + 1;
-        await supabase
-          .from("queue_counters")
-          .update({ last_number: nextNumber })
-          .eq("id", (existing as any).id);
-      } else {
-        nextNumber = 1;
-        await supabase.from("queue_counters").insert({
-          counter_date: today,
-          queue_name: params.queue_name,
-          last_number: 1,
-        });
-      }
-
-      const ticket_number = `${prefix}${String(nextNumber).padStart(3, "0")}`;
-
-      const insertData: Record<string, unknown> = {
-        ticket_number,
-        ticket_type: params.ticket_type,
-        priority,
-        priority_code: priorityCode,
-        queue_name: params.queue_name,
-        sector: params.sector || "geral",
-        source: params.source || "totem",
-        status: "aguardando",
-        notification_enabled: params.notification_enabled || false,
-        checkin_data: params.checkin_data || null,
-      };
-      if (params.patient_id) insertData.patient_id = params.patient_id;
-      if (params.appointment_id) insertData.appointment_id = params.appointment_id;
-      if (params.unit_id) insertData.unit_id = params.unit_id;
-      if (params.device_id) insertData.device_id = params.device_id;
-
-      const { data, error } = await supabase
-        .from("queue_tickets")
-        .insert(insertData as any)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      await supabase.from("queue_history").insert({
-        ticket_id: data.id,
-        action: "ticket_created",
-        new_status: "aguardando",
-        details: { source: params.source, ticket_type: params.ticket_type, priority_code: priorityCode },
-      });
-
-      return data as QueueTicket;
+      const res = await callPublicQueue<{ ticket: QueueTicket }>("create_ticket", params);
+      return res.ticket as QueueTicket;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["queue_tickets"] });
@@ -162,6 +109,7 @@ export function useGenerateTicket() {
     },
   });
 }
+
 
 export function useCallNextTicket() {
   const queryClient = useQueryClient();
