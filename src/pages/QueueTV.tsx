@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { callPublicQueue } from "@/lib/publicQueueApi";
+
 import {
   useUnitConfig, useUnitAds, formatPatientDisplay,
   getPatientNameForSpeech, ticketToSpeech, priorityToSpeech,
