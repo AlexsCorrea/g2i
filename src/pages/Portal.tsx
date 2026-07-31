@@ -198,7 +198,7 @@ export default function Portal() {
   const [showNotifWarning, setShowNotifWarning] = useState(false);
   const generateTicket = useGenerateTicket();
   const { data: myTicket } = useQueueTicketById(ticketId);
-  const { data: allTickets } = useQueueTickets({ queue_name: "recepcao", status: "aguardando" });
+  const { data: allTickets } = useQueueTickets({ queue_name: "recepcao", status: "aguardando" }, { publicMode: true });
   const { data: unitConfig } = useUnitConfig();
 
   // Auto-redirect to tracking if active ticket exists
