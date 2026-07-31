@@ -224,7 +224,7 @@ export default function AdminAutoatendimento() {
     if (!file || !config?.id) return;
     setUploading(true);
     try {
-      const url = await uploadFile(file, "exam-gallery", `unit-branding/logo-${Date.now()}.${file.name.split(".").pop()}`);
+      const url = await uploadFile(file, "public-assets", `unit-branding/logo-${Date.now()}.${file.name.split(".").pop()}`);
       updateConfig.mutate({ id: config.id, logo_url: url } as any);
       toast.success("Logo atualizada!");
     } catch (err: any) { toast.error("Erro ao enviar logo: " + err.message); }
@@ -236,7 +236,7 @@ export default function AdminAutoatendimento() {
     if (!file || !config?.id) return;
     setUploading(true);
     try {
-      const url = await uploadFile(file, "exam-gallery", `unit-branding/bg-${Date.now()}.${file.name.split(".").pop()}`);
+      const url = await uploadFile(file, "public-assets", `unit-branding/bg-${Date.now()}.${file.name.split(".").pop()}`);
       updateConfig.mutate({ id: config.id, background_image_url: url } as any);
       toast.success("Imagem de fundo atualizada!");
     } catch (err: any) { toast.error("Erro ao enviar imagem: " + err.message); }
@@ -251,7 +251,7 @@ export default function AdminAutoatendimento() {
     try {
       const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const mediaType = ["mp4", "webm", "mov"].includes(ext) ? "video" : "image";
-      const url = await uploadFile(file, "exam-gallery", `unit-ads/ad-${Date.now()}.${ext}`);
+      const url = await uploadFile(file, "public-assets", `unit-ads/ad-${Date.now()}.${ext}`);
       addAd.mutate({
         title: adTitle, media_type: mediaType, media_url: url,
         display_order: (ads?.length || 0) + 1, duration_seconds: adDuration,
