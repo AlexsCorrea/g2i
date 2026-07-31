@@ -112,10 +112,10 @@ const EXAM_URL_TTL_SECONDS = 60 * 60 * 24 * 365; // 1 year
 export async function uploadExamFile(file: File, patientId: string) {
   const ext = file.name.split(".").pop();
   const path = `${patientId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-  const { data, error } = await supabase.storage.from("exam-gallery").upload(path, file);
+  const { data, error } = await supabase.storage.from("exam-files").upload(path, file);
   if (error) throw error;
   const { data: signed, error: signError } = await supabase.storage
-    .from("exam-gallery")
+    .from("exam-files")
     .createSignedUrl(data.path, EXAM_URL_TTL_SECONDS);
   if (signError || !signed) throw signError || new Error("Não foi possível gerar o link do arquivo");
   return signed.signedUrl;
@@ -123,9 +123,9 @@ export async function uploadExamFile(file: File, patientId: string) {
 
 /** Re-signs a stored exam file URL (used when an old link expires). */
 export async function refreshExamFileUrl(fileUrl: string) {
-  const match = fileUrl.match(/exam-gallery\/(.+?)(\?|$)/);
+  const match = fileUrl.match(/exam-files\/(.+?)(\?|$)/);
   if (!match) return fileUrl;
-  const { data } = await supabase.storage.from("exam-gallery").createSignedUrl(match[1], EXAM_URL_TTL_SECONDS);
+  const { data } = await supabase.storage.from("exam-files").createSignedUrl(match[1], EXAM_URL_TTL_SECONDS);
   return data?.signedUrl || fileUrl;
 }
 

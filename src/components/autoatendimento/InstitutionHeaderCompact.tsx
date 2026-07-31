@@ -42,9 +42,9 @@ export function InstitutionHeaderCompact() {
     setUploading(true);
     try {
       const path = `institution/logo-${Date.now()}.${file.name.split(".").pop()}`;
-      const { error } = await supabase.storage.from("public-assets").upload(path, file, { upsert: true });
+      const { error } = await supabase.storage.from("exam-gallery").upload(path, file, { upsert: true });
       if (error) throw error;
-      const { data } = supabase.storage.from("public-assets").getPublicUrl(path);
+      const { data } = supabase.storage.from("exam-gallery").getPublicUrl(path);
       update.mutate({ id: inst.id, logo_url: data.publicUrl });
     } catch (err: any) {
       toast.error("Erro ao enviar logo: " + err.message);
