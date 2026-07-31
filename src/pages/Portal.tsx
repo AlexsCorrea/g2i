@@ -26,6 +26,8 @@ import { DateMaskInput } from "@/components/ui/date-mask-input";
 import { supabase } from "@/integrations/supabase/client";
 import { PriorityBadge } from "@/components/queue/PriorityBadge";
 import { useGenerateTicket, useQueueTicketById, useQueueTickets } from "@/hooks/useQueueTickets";
+import { callPublicQueue } from "@/lib/publicQueueApi";
+
 import { useUnitConfig } from "@/hooks/useUnitConfig";
 
 type NotifState = "active" | "denied" | "foreground_only" | "ios_no_pwa" | "not_configured";
