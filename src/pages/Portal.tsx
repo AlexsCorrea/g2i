@@ -260,17 +260,17 @@ export default function Portal() {
     return granted;
   };
 
-  // Load patient's today tickets
-  const loadTodayTickets = async (patientId: string) => {
-    const today = new Date().toISOString().split("T")[0];
-    const { data } = await supabase
-      .from("queue_tickets")
-      .select("*")
-      .eq("patient_id", patientId)
-      .gte("created_at", `${today}T00:00:00`)
-      .lte("created_at", `${today}T23:59:59`)
-      .order("created_at", { ascending: false });
-    setTodayTickets(data || []);
+  // Load patient's today tickets (server-side identity check)
+  const loadTodayTickets = async (cpfValue: string, birth: string) => {
+    try {
+      const res = await callPublicQueue<{ tickets: any[] }>("patient_tickets", {
+        cpf: cpfValue.replace(/\D/g, ""),
+        birth_date: birth,
+      });
+      setTodayTickets(res.tickets || []);
+    } catch {
+      setTodayTickets([]);
+    }
   };
 
   const doGenerateTicket = async (type: string) => {
@@ -280,7 +280,7 @@ export default function Portal() {
         queue_name: "recepcao",
         source: "celular",
         notification_enabled: notificationsEnabled,
-        patient_id: patientData?.id,
+        ...(patientData ? { patient_id: patientData.id, cpf: cpf.replace(/\D/g, ""), birth_date: birthDate } : {}),
       });
       setTicketId(ticket.id);
       localStorage.setItem("portal_ticket_id", ticket.id);
@@ -292,6 +292,7 @@ export default function Portal() {
       /* handled */
     }
   };
+
 
   const handleGenerateTicket = async (type: string) => {
     if (notifState === "active") {
