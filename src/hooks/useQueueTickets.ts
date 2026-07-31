@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getUserFriendlyError } from "@/lib/errorHandler";
+import { callPublicQueue } from "@/lib/publicQueueApi";
+
 
 export interface QueueTicket {
   id: string;
