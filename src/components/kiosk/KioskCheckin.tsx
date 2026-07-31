@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { ArrowLeft, Search, CheckCircle2, AlertCircle, UserPlus, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGenerateTicket } from "@/hooks/useQueueTickets";
+import { callPublicQueue } from "@/lib/publicQueueApi";
+
 import { DateMaskInput } from "@/components/ui/date-mask-input";
 import type { KioskResultData } from "@/pages/Kiosk";
 
