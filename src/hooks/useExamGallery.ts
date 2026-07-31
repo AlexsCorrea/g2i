@@ -106,7 +106,7 @@ export function useDeleteExamGalleryItem() {
 const EXAM_URL_TTL_SECONDS = 60 * 60 * 24 * 365; // 1 year
 
 /**
- * Uploads to the private `exam-gallery` bucket and returns a signed URL.
+ * Uploads to the private `exam-files` bucket and returns a signed URL.
  * The bucket is not public and cannot be listed by anonymous visitors.
  */
 export async function uploadExamFile(file: File, patientId: string) {
