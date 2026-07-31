@@ -336,6 +336,22 @@ Deno.serve(async (req) => {
         return json({ tickets: data || [] });
       }
 
+      /** Tickets issued today for the identified patient (CPF + birth date). */
+      case "patient_tickets": {
+        const patient = await resolvePatient(body.cpf, body.birth_date);
+        if (!patient) return fail("Paciente não encontrado.", 404);
+        const { data } = await admin
+          .from("queue_tickets")
+          .select("id, ticket_number, ticket_type, status, created_at, called_at")
+          .eq("patient_id", patient.id)
+          .gte("created_at", start)
+          .lte("created_at", end)
+          .order("created_at", { ascending: false });
+        return json({ tickets: data || [] });
+      }
+
+
+
       /** Lobby TV panel state: called tickets and recent history. */
       case "tv_state": {
         const { data } = await admin
