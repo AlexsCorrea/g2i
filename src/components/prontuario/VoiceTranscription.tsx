@@ -356,7 +356,12 @@ export function VoiceTranscription({ onTranscriptUpdate, transcript, patientCont
       if (blob.size >= 4096) await transcribeBlob(blob);
     }
 
-    const texts = [...rawTextRef.current];
+    // aguarda os trechos ainda em transcrição
+    while (pendingRef.current > 0) {
+      await new Promise((r) => setTimeout(r, 300));
+    }
+
+    const texts = rawTextRef.current.map((t) => t.trim()).filter(Boolean);
     rawTextRef.current = [];
     if (texts.length === 0) {
       setError("Nenhuma fala foi captada. Verifique o microfone e tente novamente.");
