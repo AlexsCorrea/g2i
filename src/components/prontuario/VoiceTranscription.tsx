@@ -20,7 +20,7 @@ interface VoiceTranscriptionProps {
 }
 
 const FN_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-const CHUNK_SECONDS = 20;
+const CHUNK_SECONDS = 5;
 const TARGET_RATE = 16000;
 
 /** Downsample Float32 PCM to target sample rate and encode a 16-bit mono WAV file. */
@@ -116,16 +116,20 @@ export function VoiceTranscription({ onTranscriptUpdate, transcript, patientCont
     return data.session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   }, []);
 
-  /** Upload one WAV window and append the recognized text to the raw buffer. */
+  /** Upload one WAV window and stream the recognized text into its ordered slot. */
   const transcribeBlob = useCallback(
     async (blob: Blob) => {
+      const slot = rawTextRef.current.length;
+      rawTextRef.current.push("");
       pendingRef.current += 1;
       setIsTranscribing(true);
+      const render = () =>
+        setLiveText(rawTextRef.current.filter(Boolean).join(" ").replace(/\s+/g, " ").trim());
       try {
         const token = await getToken();
         const fd = new FormData();
         fd.append("file", blob, "recording.wav");
-        const resp = await fetch(`${FN_BASE}/voice-transcribe`, {
+        const resp = await fetch(`${FN_BASE}/voice-transcribe?stream=true`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: fd,
@@ -136,13 +140,49 @@ export function VoiceTranscription({ onTranscriptUpdate, transcript, patientCont
           toast.error(err.error || "Falha ao transcrever o áudio");
           return;
         }
-        const { text } = await resp.json();
-        const clean = (text || "").trim();
-        if (clean) {
-          rawTextRef.current.push(clean);
-          setLiveText(rawTextRef.current.join(" "));
+
+        const ct = resp.headers.get("Content-Type") || "";
+        if (!ct.includes("text/event-stream") || !resp.body) {
+          const { text } = await resp.json();
+          rawTextRef.current[slot] = (text || "").trim();
+          render();
           setError(null);
+          return;
         }
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let idx: number;
+          while ((idx = buffer.indexOf("\n")) !== -1) {
+            let line = buffer.slice(0, idx);
+            buffer = buffer.slice(idx + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (!line.startsWith("data: ")) continue;
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") continue;
+            try {
+              const evt = JSON.parse(jsonStr);
+              if (evt.type === "transcript.text.delta" && evt.delta) {
+                rawTextRef.current[slot] += evt.delta;
+                render();
+              } else if (evt.type === "transcript.text.done" && evt.text) {
+                rawTextRef.current[slot] = evt.text;
+                render();
+              }
+            } catch {
+              buffer = line + "\n" + buffer;
+              break;
+            }
+          }
+        }
+        rawTextRef.current[slot] = rawTextRef.current[slot].trim();
+        render();
+        setError(null);
       } catch (e) {
         console.error("transcribe error", e);
         setError("Erro de rede ao enviar o áudio");
@@ -316,7 +356,12 @@ export function VoiceTranscription({ onTranscriptUpdate, transcript, patientCont
       if (blob.size >= 4096) await transcribeBlob(blob);
     }
 
-    const texts = [...rawTextRef.current];
+    // aguarda os trechos ainda em transcrição
+    while (pendingRef.current > 0) {
+      await new Promise((r) => setTimeout(r, 300));
+    }
+
+    const texts = rawTextRef.current.map((t) => t.trim()).filter(Boolean);
     rawTextRef.current = [];
     if (texts.length === 0) {
       setError("Nenhuma fala foi captada. Verifique o microfone e tente novamente.");
@@ -401,7 +446,7 @@ export function VoiceTranscription({ onTranscriptUpdate, transcript, patientCont
           <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
             <Mic className="h-3 w-3" />
             {isRecording
-              ? `Gravando... a transcrição é processada a cada ${CHUNK_SECONDS}s`
+              ? "Transcrição em tempo real — o texto aparece conforme você fala"
               : "Texto bruto captado"}
           </p>
           <p className="text-sm text-foreground/70">
