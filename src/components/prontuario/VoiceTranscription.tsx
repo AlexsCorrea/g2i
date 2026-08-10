@@ -20,7 +20,7 @@ interface VoiceTranscriptionProps {
 }
 
 const FN_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-const CHUNK_SECONDS = 20;
+const CHUNK_SECONDS = 5;
 const TARGET_RATE = 16000;
 
 /** Downsample Float32 PCM to target sample rate and encode a 16-bit mono WAV file. */
