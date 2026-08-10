@@ -446,7 +446,7 @@ export function VoiceTranscription({ onTranscriptUpdate, transcript, patientCont
           <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
             <Mic className="h-3 w-3" />
             {isRecording
-              ? `Gravando... a transcrição é processada a cada ${CHUNK_SECONDS}s`
+              ? "Transcrição em tempo real — o texto aparece conforme você fala"
               : "Texto bruto captado"}
           </p>
           <p className="text-sm text-foreground/70">
