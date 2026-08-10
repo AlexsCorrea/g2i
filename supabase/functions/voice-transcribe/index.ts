@@ -87,6 +87,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (wantsStream && resp.body) {
+      return new Response(resp.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
     const result = await resp.json();
     return new Response(JSON.stringify({ text: result.text ?? "" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
