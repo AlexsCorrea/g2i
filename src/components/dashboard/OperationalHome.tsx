@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { DoctorDayHome } from "@/components/dashboard/DoctorDayHome";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,6 +62,7 @@ export default function OperationalHome() {
   const { data: appointments, isLoading: loadingAppts } = useTodayAppointments();
   const { data: recentPatients, isLoading: loadingPatients } = useRecentPatients();
 
+  const [view, setView] = useState("meu-dia");
   const userRole = profile?.role || "default";
   const activeWidgets = roleWidgets[userRole] || roleWidgets.default;
 
@@ -75,11 +78,9 @@ export default function OperationalHome() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">
-            {greeting()}, {profile?.full_name?.split(" ")[0] || "Profissional"}
-          </h1>
+          <h1 className="text-xl font-semibold text-foreground">Painel inicial</h1>
           <p className="text-sm text-muted-foreground">
-            {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            Resumo do seu dia, agenda e pendências em um só lugar
           </p>
         </div>
         <div className="flex gap-2">
@@ -94,10 +95,31 @@ export default function OperationalHome() {
         </div>
       </div>
 
+      <Tabs value={view} onValueChange={setView}>
+        <TabsList>
+          <TabsTrigger value="meu-dia" className="gap-1.5 text-xs">
+            <Stethoscope className="h-3.5 w-3.5" /> Meu Dia
+          </TabsTrigger>
+          <TabsTrigger value="operacional" className="gap-1.5 text-xs">
+            <TrendingUp className="h-3.5 w-3.5" /> Visão Operacional
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="meu-dia" className="mt-4">
+          <DoctorDayHome
+            appointments={appointments}
+            loadingAppointments={loadingAppts}
+            patients={recentPatients}
+            doctorName={profile?.full_name?.split(" ")[0] || "Profissional"}
+          />
+        </TabsContent>
+
+        <TabsContent value="operacional" className="mt-4 space-y-5">
       {/* Stats */}
       {activeWidgets.includes("stats") && (
         <StatsCards stats={stats} isLoading={loadingStats} />
       )}
+
 
       {/* Quick Access Grid */}
       {activeWidgets.includes("quickAccess") && (
@@ -159,6 +181,8 @@ export default function OperationalHome() {
           <RecentPatientsCard patients={recentPatients} isLoading={loadingPatients} />
         )}
       </div>
+        </TabsContent>
+      </Tabs>
 
       <WhatsNewModal />
     </div>
