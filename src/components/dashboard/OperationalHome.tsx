@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { DoctorDayHome } from "@/components/dashboard/DoctorDayHome";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
