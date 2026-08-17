@@ -3,11 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Activity, HeartPulse, TrendingUp, Gauge, RefreshCw } from "lucide-react";
+import { ArrowLeft, Activity, HeartPulse, TrendingUp, Gauge, RefreshCw, Receipt, Banknote, Boxes, Route, Handshake } from "lucide-react";
 import { OperationalDashboard } from "@/components/dashboards/OperationalDashboard";
 import { ClinicalDashboard } from "@/components/dashboards/ClinicalDashboard";
 import { ProductionDashboard } from "@/components/dashboards/ProductionDashboard";
 import { PerformanceDashboard } from "@/components/dashboards/PerformanceDashboard";
+import { BillingDashboard } from "@/components/dashboards/BillingDashboard";
+import { FinanceDashboard } from "@/components/dashboards/FinanceDashboard";
+import { InventoryDashboard } from "@/components/dashboards/InventoryDashboard";
+import { CommercialDashboard } from "@/components/dashboards/CommercialDashboard";
+import { JourneyCostDashboard } from "@/components/dashboards/JourneyCostDashboard";
 import { useQueryClient } from "@tanstack/react-query";
 
 const Dashboards = () => {
@@ -51,7 +56,7 @@ const Dashboards = () => {
 
       <main className="max-w-[1400px] mx-auto px-6 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl mb-6">
+          <TabsList className="flex flex-wrap h-auto w-full justify-start gap-1 mb-6">
             <TabsTrigger value="operacional" className="gap-2 text-xs">
               <Activity className="h-4 w-4" /> Operacional
             </TabsTrigger>
@@ -66,10 +71,32 @@ const Dashboards = () => {
             </TabsTrigger>
           </TabsList>
 
+            <TabsTrigger value="faturamento" className="gap-2 text-xs">
+              <Receipt className="h-4 w-4" /> Faturamento
+            </TabsTrigger>
+            <TabsTrigger value="financeiro" className="gap-2 text-xs">
+              <Banknote className="h-4 w-4" /> Financeiro
+            </TabsTrigger>
+            <TabsTrigger value="comercial" className="gap-2 text-xs">
+              <Handshake className="h-4 w-4" /> Comercial
+            </TabsTrigger>
+            <TabsTrigger value="estoque" className="gap-2 text-xs">
+              <Boxes className="h-4 w-4" /> Estoque
+            </TabsTrigger>
+            <TabsTrigger value="jornada" className="gap-2 text-xs">
+              <Route className="h-4 w-4" /> Jornada e Custos
+            </TabsTrigger>
+          </TabsList>
+
           <TabsContent value="operacional"><OperationalDashboard /></TabsContent>
           <TabsContent value="clinico"><ClinicalDashboard /></TabsContent>
           <TabsContent value="producao"><ProductionDashboard /></TabsContent>
           <TabsContent value="performance"><PerformanceDashboard /></TabsContent>
+          <TabsContent value="faturamento"><BillingDashboard /></TabsContent>
+          <TabsContent value="financeiro"><FinanceDashboard /></TabsContent>
+          <TabsContent value="comercial"><CommercialDashboard /></TabsContent>
+          <TabsContent value="estoque"><InventoryDashboard /></TabsContent>
+          <TabsContent value="jornada"><JourneyCostDashboard /></TabsContent>
         </Tabs>
       </main>
     </div>
