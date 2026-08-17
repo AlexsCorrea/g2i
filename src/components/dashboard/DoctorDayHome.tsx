@@ -78,7 +78,11 @@ export function DoctorDayHome({ appointments, loadingAppointments, patients, doc
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-primary">Meu dia</p>
                 <h2 className="text-2xl font-semibold text-foreground mt-0.5">
-                  {greeting()}, {/^dr/i.test(doctorName) ? doctorName : `Dr(a). ${doctorName}`}
+                  {greeting()}, {(() => {
+                    const parts = doctorName.trim().split(/\s+/);
+                    const prefix = /^dra?\.?$/i.test(parts[0]) ? parts.shift()! : "Dr(a).";
+                    return `${prefix} ${parts[0] ?? ""}`.trim();
+                  })()}
                 </h2>
                 <p className="text-sm text-muted-foreground capitalize">
                   {format(new Date(now), "EEEE, d 'de' MMMM", { locale: ptBR })} ·{" "}
