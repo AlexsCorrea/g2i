@@ -161,6 +161,8 @@ export default function OperationalHome() {
           <RecentPatientsCard patients={recentPatients} isLoading={loadingPatients} />
         )}
       </div>
+        </TabsContent>
+      </Tabs>
 
       <WhatsNewModal />
     </div>
