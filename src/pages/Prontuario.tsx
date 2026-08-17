@@ -48,6 +48,8 @@ import { ProntuarioSidebar } from "@/components/prontuario/ProntuarioSidebar";
 import { QuickActions } from "@/components/prontuario/QuickActions";
 import { AIChatButton } from "@/components/prontuario/AIChatButton";
 import { AIAssistantPanel } from "@/components/prontuario/AIAssistantPanel";
+import { PatientBoards } from "@/components/prontuario/PatientBoards";
+import { PatientForms } from "@/components/prontuario/PatientForms";
 import { ModuleSection, EmptyModule } from "@/components/prontuario/sections/ModuleSection";
 import { LabResultsForPatient } from "@/components/prontuario/LabResultsForPatient";
 import { ClinicalAnalytics } from "@/components/prontuario/ClinicalAnalytics";
@@ -1184,6 +1186,8 @@ export default function Prontuario() {
       case "analise-cardiologia": return <ClinicalAnalytics view="cardiologia" vitalSigns={vitalSigns} />;
       case "analise-uti": return <ClinicalAnalytics view="uti" vitalSigns={vitalSigns} latestGlasgow={latestGlasgow} latestBraden={latestBraden} latestMorse={latestMorse} medications={medications} allergies={allergies} />;
       case "analise-tendencias": return <ClinicalAnalytics view="tendencias" vitalSigns={vitalSigns} />;
+      case "painel-boards": return <PatientBoards patientName={patient.full_name} />;
+      case "formularios-paciente": return <PatientForms patientId={patient.id} patientName={patient.full_name} />;
       default: return renderResumo();
     }
   };

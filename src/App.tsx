@@ -17,6 +17,7 @@ import AgendaAdmin from "./pages/AgendaAdmin";
 import AgendaCentroCirurgico from "./pages/AgendaCentroCirurgico";
 import AgendaPrint from "./pages/AgendaPrint";
 import AgendaReports from "./pages/AgendaReports";
+import PublicPatientForm from "./pages/PublicPatientForm";
 import Autoagendamento from "./pages/Autoagendamento";
 import Dashboards from "./pages/Dashboards";
 import Kiosk from "./pages/Kiosk";
@@ -71,6 +72,7 @@ function App() {
                 <Route path="/painel" element={<QueuePanel />} />
                 <Route path="/painel-tv/select" element={<QueueTvSelect />} />
                 <Route path="/painel-tv" element={<QueueTV />} />
+                <Route path="/formulario/:token" element={<PublicPatientForm />} />
                 <Route path="/autoagendamento" element={<Autoagendamento />} />
 
                 {/* Protected routes */}
