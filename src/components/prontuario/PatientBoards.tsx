@@ -266,7 +266,7 @@ export function PatientBoards({ patientName }: { patientName?: string }) {
                 <p className="text-[11px] text-muted-foreground">Progresso do plano de cuidado</p>
               </div>
               {[
-                { label: "Controle da febre (&lt; 37,5 °C por 48h)", value: 70 },
+                { label: "Controle da febre por 48h", value: 70 },
                 { label: "Desmame de oxigênio", value: 45 },
                 { label: "Aceitação da dieta oral", value: 82 },
                 { label: "Deambulação assistida", value: 30 },
@@ -274,7 +274,7 @@ export function PatientBoards({ patientName }: { patientName?: string }) {
               ].map((m) => (
                 <div key={m.label} className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-foreground" dangerouslySetInnerHTML={{ __html: m.label }} />
+                    <span className="text-foreground">{m.label}</span>
                     <span className="text-muted-foreground">{m.value}%</span>
                   </div>
                   <Progress value={m.value} className="h-1.5" />
