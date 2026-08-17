@@ -371,6 +371,8 @@ export function AIAssistantPanel({
           </TabsContent>
         ))}
       </Tabs>
+      )}
     </div>
+
   );
 }
