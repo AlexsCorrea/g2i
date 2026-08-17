@@ -78,7 +78,7 @@ export function DoctorDayHome({ appointments, loadingAppointments, patients, doc
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-primary">Meu dia</p>
                 <h2 className="text-2xl font-semibold text-foreground mt-0.5">
-                  {greeting()}, Dr(a). {doctorName}
+                  {greeting()}, {/^dr/i.test(doctorName) ? doctorName : `Dr(a). ${doctorName}`}
                 </h2>
                 <p className="text-sm text-muted-foreground capitalize">
                   {format(new Date(now), "EEEE, d 'de' MMMM", { locale: ptBR })} ·{" "}

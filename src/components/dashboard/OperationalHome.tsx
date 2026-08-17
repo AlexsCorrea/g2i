@@ -78,11 +78,9 @@ export default function OperationalHome() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">
-            {greeting()}, {profile?.full_name?.split(" ")[0] || "Profissional"}
-          </h1>
+          <h1 className="text-xl font-semibold text-foreground">Painel inicial</h1>
           <p className="text-sm text-muted-foreground">
-            {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            Resumo do seu dia, agenda e pendências em um só lugar
           </p>
         </div>
         <div className="flex gap-2">
