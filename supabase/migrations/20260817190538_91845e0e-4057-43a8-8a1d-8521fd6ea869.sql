@@ -1,0 +1,2 @@
+UPDATE public.patients SET status='ambulatorial', room=NULL, bed=NULL, admission_date=NULL
+WHERE status='internado' AND (bed IS NULL OR bed NOT IN (SELECT bed_number FROM public.beds WHERE status='ocupado'));
