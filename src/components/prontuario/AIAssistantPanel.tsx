@@ -180,10 +180,8 @@ export function AIAssistantPanel({
       )}
 
       {!minimized && (
-
-
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+
         <TabsList className="grid grid-cols-4 mx-4 mt-3 shrink-0">
           <TabsTrigger value="transcricao" className="text-xs gap-1">
             <Mic className="h-3.5 w-3.5" />
