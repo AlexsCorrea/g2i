@@ -62,6 +62,7 @@ export default function OperationalHome() {
   const { data: appointments, isLoading: loadingAppts } = useTodayAppointments();
   const { data: recentPatients, isLoading: loadingPatients } = useRecentPatients();
 
+  const [view, setView] = useState("meu-dia");
   const userRole = profile?.role || "default";
   const activeWidgets = roleWidgets[userRole] || roleWidgets.default;
 
