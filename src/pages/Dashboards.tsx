@@ -69,7 +69,6 @@ const Dashboards = () => {
             <TabsTrigger value="performance" className="gap-2 text-xs">
               <Gauge className="h-4 w-4" /> Performance
             </TabsTrigger>
-          </TabsList>
 
             <TabsTrigger value="faturamento" className="gap-2 text-xs">
               <Receipt className="h-4 w-4" /> Faturamento
