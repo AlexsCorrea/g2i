@@ -164,8 +164,11 @@ const sections: SidebarSection[] = [
       { id: "analise-cardiologia", label: "Cardiologia", icon: HeartPulse },
       { id: "analise-uti", label: "UTI / Críticos", icon: HeartPulse },
       { id: "analise-tendencias", label: "Tendências", icon: TrendingUp },
+      { id: "painel-boards", label: "Painéis (Boards)", icon: BarChart2 },
+      { id: "formularios-paciente", label: "Formulários do Paciente", icon: ClipboardList },
     ],
   },
+
   {
     id: "auditoria-geral",
     label: "Auditoria e Histórico",
