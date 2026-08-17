@@ -110,7 +110,7 @@ export default function OperationalHome() {
             appointments={appointments}
             loadingAppointments={loadingAppts}
             patients={recentPatients}
-            doctorName={profile?.full_name?.split(" ")[0] || "Profissional"}
+            doctorName={profile?.full_name || "Profissional"}
           />
         </TabsContent>
 

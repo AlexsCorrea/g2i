@@ -43,8 +43,8 @@ const Dashboards = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-lg font-bold text-foreground">Dashboards Hospitalares</h1>
-              <p className="text-xs text-muted-foreground">Gestão e indicadores em tempo real</p>
+              <h1 className="text-lg font-bold text-foreground">Indicadores do Estabelecimento</h1>
+              <p className="text-xs text-muted-foreground">Dashboards de gestão assistencial, financeira e operacional</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">

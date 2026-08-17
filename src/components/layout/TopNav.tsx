@@ -138,7 +138,7 @@ const menuConfig: MenuItem[] = [
       {
         heading: "Indicadores",
         items: [
-          { label: "Dashboards", icon: TrendingUp, path: "/dashboards" },
+          { label: "Indicadores do Estabelecimento", icon: TrendingUp, path: "/dashboards" },
           { label: "Produtividade", icon: Activity, path: "/gerenciamento/produtividade" },
         ],
       },

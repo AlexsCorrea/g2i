@@ -1,0 +1,1 @@
+UPDATE public.profiles SET full_name = 'Dra. Mayara Andrade', role = 'medico', specialty = 'Oftalmologia', crm_coren = 'CRM-MS 12345' WHERE id = '8bd49b6f-e8d4-47e0-92f0-5bfb6a1a5b1f';
