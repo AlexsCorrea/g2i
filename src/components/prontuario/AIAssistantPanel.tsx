@@ -137,15 +137,15 @@ export function AIAssistantPanel({
     <div
       className={
         minimized
-          ? "fixed bottom-24 right-6 z-50 w-[320px] bg-card border border-border rounded-xl shadow-2xl flex flex-col"
-          : "fixed inset-y-0 right-0 z-50 w-[480px] max-w-full bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
+          ? "fixed bottom-24 right-6 z-[100] w-[320px] bg-card border border-border rounded-xl shadow-2xl flex flex-col"
+          : "fixed inset-y-0 right-0 z-[100] w-[480px] max-w-full bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
       }
     >
       {/* Header */}
-      <div className="bg-primary/5 border-b border-border px-4 py-3 flex items-center justify-between gap-2 shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-            <Brain className="h-5 w-5 text-primary" />
+      <div className="bg-primary/5 border-b border-border px-3 py-2 flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Brain className="h-4 w-4 text-primary" />
           </div>
           <div className="min-w-0">
             <h2 className="font-semibold text-sm truncate">Assistente IA Clínico</h2>
@@ -155,26 +155,27 @@ export function AIAssistantPanel({
         <div className="flex items-center gap-1 shrink-0">
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => setMinimized((m) => !m)}
-            className="h-8 px-2 text-xs gap-1"
+            className="h-8 w-8"
+            aria-label={minimized ? "Expandir painel" : "Minimizar painel"}
             title={minimized ? "Expandir painel" : "Minimizar (mantém a gravação)"}
           >
-            {minimized ? <Maximize2 className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
-            {minimized ? "Expandir" : "Minimizar"}
+            {minimized ? <Maximize2 className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
           </Button>
           <Button
-            variant="ghost"
-            size="sm"
+            variant="destructive"
+            size="icon"
             onClick={onClose}
-            className="h-8 px-2 text-xs gap-1 text-destructive hover:text-destructive"
+            className="h-8 w-8"
+            aria-label="Fechar assistente"
             title="Fechar assistente"
           >
             <X className="h-4 w-4" />
-            Fechar
           </Button>
         </div>
       </div>
+
 
       {minimized && (
         <div className="px-4 py-3 text-[11px] text-muted-foreground">
