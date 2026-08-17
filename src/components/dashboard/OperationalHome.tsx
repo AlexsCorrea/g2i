@@ -96,10 +96,31 @@ export default function OperationalHome() {
         </div>
       </div>
 
+      <Tabs value={view} onValueChange={setView}>
+        <TabsList>
+          <TabsTrigger value="meu-dia" className="gap-1.5 text-xs">
+            <Stethoscope className="h-3.5 w-3.5" /> Meu Dia
+          </TabsTrigger>
+          <TabsTrigger value="operacional" className="gap-1.5 text-xs">
+            <TrendingUp className="h-3.5 w-3.5" /> Visão Operacional
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="meu-dia" className="mt-4">
+          <DoctorDayHome
+            appointments={appointments}
+            loadingAppointments={loadingAppts}
+            patients={recentPatients}
+            doctorName={profile?.full_name?.split(" ")[0] || "Profissional"}
+          />
+        </TabsContent>
+
+        <TabsContent value="operacional" className="mt-4 space-y-5">
       {/* Stats */}
       {activeWidgets.includes("stats") && (
         <StatsCards stats={stats} isLoading={loadingStats} />
       )}
+
 
       {/* Quick Access Grid */}
       {activeWidgets.includes("quickAccess") && (
