@@ -39,6 +39,8 @@ export function AIAssistantPanel({
   const [results, setResults] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState<string | null>(null);
+  const [minimized, setMinimized] = useState(false);
+
 
   const getTranscriptText = useCallback(() => {
     return transcript
