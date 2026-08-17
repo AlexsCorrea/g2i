@@ -131,22 +131,56 @@ export function AIAssistantPanel({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-[480px] max-w-full bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+    <div
+      className={
+        minimized
+          ? "fixed bottom-24 right-6 z-50 w-[320px] bg-card border border-border rounded-xl shadow-2xl flex flex-col"
+          : "fixed inset-y-0 right-0 z-50 w-[480px] max-w-full bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
+      }
+    >
       {/* Header */}
-      <div className="bg-primary/5 border-b border-border px-5 py-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+      <div className="bg-primary/5 border-b border-border px-4 py-3 flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <Brain className="h-5 w-5 text-primary" />
           </div>
-          <div>
-            <h2 className="font-semibold text-sm">Assistente IA Clínico</h2>
-            <p className="text-[11px] text-muted-foreground">{patientName}</p>
+          <div className="min-w-0">
+            <h2 className="font-semibold text-sm truncate">Assistente IA Clínico</h2>
+            <p className="text-[11px] text-muted-foreground truncate">{patientName}</p>
           </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMinimized((m) => !m)}
+            className="h-8 px-2 text-xs gap-1"
+            title={minimized ? "Expandir painel" : "Minimizar (mantém a gravação)"}
+          >
+            {minimized ? <Maximize2 className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
+            {minimized ? "Expandir" : "Minimizar"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 px-2 text-xs gap-1 text-destructive hover:text-destructive"
+            title="Fechar assistente"
+          >
+            <X className="h-4 w-4" />
+            Fechar
+          </Button>
+        </div>
       </div>
+
+      {minimized && (
+        <div className="px-4 py-3 text-[11px] text-muted-foreground">
+          Assistente em segundo plano — a gravação e a transcrição continuam ativas.
+        </div>
+      )}
+
+      {!minimized && (
+
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
