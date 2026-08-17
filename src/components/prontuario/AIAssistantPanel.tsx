@@ -1,8 +1,9 @@
 import { useState, useCallback } from "react";
 import {
   Brain, Mic, FileText, Lightbulb, ClipboardList,
-  Sparkles, X, Loader2, Copy, Check, Save, Pencil,
+  Sparkles, X, Loader2, Copy, Check, Save, Pencil, Minus, Maximize2,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
