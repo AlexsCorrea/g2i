@@ -230,6 +230,8 @@ export default function SalaEspera() {
                       const sc = waitingStatusConfig[a.status] || waitingStatusConfig.em_espera;
                       const waitTime = getWaitTime(a);
                       const isLate = waitTime && parseInt(waitTime) > 30;
+                      const procedures = getProcedures(a);
+                      const call = calls[a.id];
 
                       return (
                         <tr key={a.id} className={cn("hover:bg-muted/20 transition-colors", a.status === "em_andamento" && "bg-amber-50/30")}>
