@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 import {
   DoorOpen, Search, Clock, User, CheckCircle, PlayCircle, FileText,
   Phone, Megaphone, ArrowLeft, Heart, RotateCcw, Ban, ChevronRight,
-  AlertCircle, Shield, Timer, Loader2
+  AlertCircle, Shield, Timer, Loader2, Volume2
 } from "lucide-react";
 import { format, differenceInMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -77,8 +79,36 @@ export default function SalaEspera() {
     emAtendimento: waitingList.filter(a => a.status === "em_andamento").length,
   }), [waitingList]);
 
+  const [calls, setCalls] = useState<Record<string, { count: number; at: number }>>({});
+
   const quickAction = async (id: string, status: string) => {
     await updateAppointment.mutateAsync({ id, status: status as any });
+  };
+
+  /* Procedimentos lançados para o paciente (tooltip) */
+  const getProcedures = (a: Appointment): string[] => {
+    const raw = [(a as any).description, (a as any).notes].filter(Boolean).join("\n");
+    return raw
+      .split(/\n|;|\||,/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  };
+
+  /* Chamada do paciente (locução + registro local) */
+  const callPatient = (a: Appointment) => {
+    const name = a.patients?.full_name || (a as any).provisional_name || a.title;
+    const local = (a as any).room || a.location || "recepção";
+    setCalls(prev => ({ ...prev, [a.id]: { count: (prev[a.id]?.count || 0) + 1, at: Date.now() } }));
+    try {
+      const utter = new SpeechSynthesisUtterance(`${name}, comparecer à ${local}.`);
+      utter.lang = "pt-BR";
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+    } catch { /* locução indisponível */ }
+    if (a.status === "chegou" || a.status === "confirmado" || a.status === "agendado") {
+      updateAppointment.mutate({ id: a.id, status: "em_espera" as any });
+    }
+    toast.success(`Chamando ${name}`, { description: `Local: ${local}` });
   };
 
   const getWaitTime = (a: Appointment) => {
@@ -200,6 +230,8 @@ export default function SalaEspera() {
                       const sc = waitingStatusConfig[a.status] || waitingStatusConfig.em_espera;
                       const waitTime = getWaitTime(a);
                       const isLate = waitTime && parseInt(waitTime) > 30;
+                      const procedures = getProcedures(a);
+                      const call = calls[a.id];
 
                       return (
                         <tr key={a.id} className={cn("hover:bg-muted/20 transition-colors", a.status === "em_andamento" && "bg-amber-50/30")}>
@@ -208,7 +240,26 @@ export default function SalaEspera() {
                           </td>
                           <td className="px-4 py-3">
                             <div>
-                              <span className="font-medium text-sm">{a.patients?.full_name || (a as any).provisional_name || a.title}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-medium text-sm">{a.patients?.full_name || (a as any).provisional_name || a.title}</span>
+                                {procedures.length > 0 && (
+                                  <TooltipProvider delayDuration={100}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="inline-flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-primary text-primary-foreground text-[9px] font-semibold cursor-help">
+                                          {procedures.length}
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="right" className="max-w-xs">
+                                        <p className="text-[10px] font-semibold uppercase tracking-wide mb-1 opacity-70">Procedimentos lançados</p>
+                                        <ul className="list-disc pl-4 space-y-0.5 text-xs">
+                                          {procedures.map((p, i) => <li key={i}>{p}</li>)}
+                                        </ul>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 {!a.patient_id && <Badge variant="outline" className="text-[9px] px-1 py-0 bg-amber-50 text-amber-600 border-amber-200">Cadastro pendente</Badge>}
                                 {(a as any).is_fit_in && <Badge variant="outline" className="text-[9px] px-1 py-0 bg-violet-50 text-violet-600 border-violet-200">Encaixe</Badge>}
@@ -233,8 +284,18 @@ export default function SalaEspera() {
                             <Badge variant="outline" className={cn("text-[10px]", sc.color)}>{sc.label}</Badge>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center justify-end gap-1">
-                              {(a.status === "chegou" || a.status === "confirmado" || a.status === "em_espera") && (
+                             <div className="flex items-center justify-end gap-1">
+                               {!["concluido", "cancelado", "nao_compareceu"].includes(a.status) && (
+                                 <Button size="sm" variant="outline"
+                                   className="h-7 px-2 text-[10px] gap-1 border-primary/30 text-primary hover:bg-primary/5"
+                                   title="Chamar paciente"
+                                   onClick={() => callPatient(a)}>
+                                   <Megaphone className="h-3 w-3" />
+                                   Chamar
+                                   {call && <span className="ml-0.5 rounded-full bg-primary/10 px-1 text-[9px] font-semibold">{call.count}x</span>}
+                                 </Button>
+                               )}
+                               {(a.status === "chegou" || a.status === "confirmado" || a.status === "em_espera") && (
                                 <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] gap-1 border-amber-200 text-amber-700 hover:bg-amber-50"
                                   onClick={() => quickAction(a.id, "em_andamento")}>
                                   <PlayCircle className="h-3 w-3" />Atender
