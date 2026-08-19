@@ -238,7 +238,26 @@ export default function SalaEspera() {
                           </td>
                           <td className="px-4 py-3">
                             <div>
-                              <span className="font-medium text-sm">{a.patients?.full_name || (a as any).provisional_name || a.title}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-medium text-sm">{a.patients?.full_name || (a as any).provisional_name || a.title}</span>
+                                {procedures.length > 0 && (
+                                  <TooltipProvider delayDuration={100}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="inline-flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-primary text-primary-foreground text-[9px] font-semibold cursor-help">
+                                          {procedures.length}
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="right" className="max-w-xs">
+                                        <p className="text-[10px] font-semibold uppercase tracking-wide mb-1 opacity-70">Procedimentos lançados</p>
+                                        <ul className="list-disc pl-4 space-y-0.5 text-xs">
+                                          {procedures.map((p, i) => <li key={i}>{p}</li>)}
+                                        </ul>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 {!a.patient_id && <Badge variant="outline" className="text-[9px] px-1 py-0 bg-amber-50 text-amber-600 border-amber-200">Cadastro pendente</Badge>}
                                 {(a as any).is_fit_in && <Badge variant="outline" className="text-[9px] px-1 py-0 bg-violet-50 text-violet-600 border-violet-200">Encaixe</Badge>}
