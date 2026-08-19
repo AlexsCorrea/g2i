@@ -49,7 +49,7 @@ export function useDoctorLabResults() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lab_results")
-        .select("id, status, is_critical, is_abnormal, created_at, result_value, unit")
+        .select("id, status, is_critical, is_abnormal, created_at, value, unit")
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
@@ -66,8 +66,8 @@ export function useDoctorExamRequests() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("exam_requests")
-        .select("id, exam_name, exam_type, status, priority, requested_at, patient_id, patients(full_name)")
-        .order("requested_at", { ascending: false })
+        .select("id, exam_type, exam_category, status, priority, created_at, patient_id, patients(full_name)")
+        .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
       return (data ?? []) as any[];
