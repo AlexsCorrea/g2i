@@ -79,8 +79,36 @@ export default function SalaEspera() {
     emAtendimento: waitingList.filter(a => a.status === "em_andamento").length,
   }), [waitingList]);
 
+  const [calls, setCalls] = useState<Record<string, { count: number; at: number }>>({});
+
   const quickAction = async (id: string, status: string) => {
     await updateAppointment.mutateAsync({ id, status: status as any });
+  };
+
+  /* Procedimentos lançados para o paciente (tooltip) */
+  const getProcedures = (a: Appointment): string[] => {
+    const raw = [(a as any).description, (a as any).notes].filter(Boolean).join("\n");
+    return raw
+      .split(/\n|;|\||,/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  };
+
+  /* Chamada do paciente (locução + registro local) */
+  const callPatient = (a: Appointment) => {
+    const name = a.patients?.full_name || (a as any).provisional_name || a.title;
+    const local = (a as any).room || a.location || "recepção";
+    setCalls(prev => ({ ...prev, [a.id]: { count: (prev[a.id]?.count || 0) + 1, at: Date.now() } }));
+    try {
+      const utter = new SpeechSynthesisUtterance(`${name}, comparecer à ${local}.`);
+      utter.lang = "pt-BR";
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+    } catch { /* locução indisponível */ }
+    if (a.status === "chegou" || a.status === "confirmado" || a.status === "agendado") {
+      updateAppointment.mutate({ id: a.id, status: "em_espera" as any });
+    }
+    toast.success(`Chamando ${name}`, { description: `Local: ${local}` });
   };
 
   const getWaitTime = (a: Appointment) => {
