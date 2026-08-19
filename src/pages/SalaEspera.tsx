@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 import {
   DoorOpen, Search, Clock, User, CheckCircle, PlayCircle, FileText,
   Phone, Megaphone, ArrowLeft, Heart, RotateCcw, Ban, ChevronRight,
-  AlertCircle, Shield, Timer, Loader2
+  AlertCircle, Shield, Timer, Loader2, Volume2
 } from "lucide-react";
 import { format, differenceInMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
