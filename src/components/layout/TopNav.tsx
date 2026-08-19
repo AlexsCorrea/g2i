@@ -37,6 +37,7 @@ const menuConfig: MenuItem[] = [
     groups: [
       {
         items: [
+          { label: "Sala do Profissional", icon: Stethoscope, path: "/sala-do-medico" },
           { label: "Sala de Espera", icon: DoorOpen, path: "/salas/espera" },
           { label: "Sala de Procedimentos", icon: Stethoscope, path: "/salas/procedimentos" },
         ],

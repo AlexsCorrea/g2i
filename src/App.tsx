@@ -33,6 +33,7 @@ import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import SalaEspera from "./pages/SalaEspera";
+import SalaMedico from "./pages/SalaMedico";
 
 // Functional module pages
 import AtendimentosAbertura from "./pages/AtendimentosAbertura";
@@ -78,6 +79,7 @@ function App() {
                 {/* Protected routes */}
                 <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
                 <Route path="/prontuario/:id" element={<ProtectedRoute><Prontuario /></ProtectedRoute>} />
+                <Route path="/sala-do-medico" element={<ProtectedRoute><SalaMedico /></ProtectedRoute>} />
                 <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
                 <Route path="/agenda/admin" element={<ProtectedRoute><AgendaAdmin /></ProtectedRoute>} />
                 <Route path="/dashboards" element={<ProtectedRoute><Dashboards /></ProtectedRoute>} />
