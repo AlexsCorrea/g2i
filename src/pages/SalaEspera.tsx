@@ -284,8 +284,18 @@ export default function SalaEspera() {
                             <Badge variant="outline" className={cn("text-[10px]", sc.color)}>{sc.label}</Badge>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center justify-end gap-1">
-                              {(a.status === "chegou" || a.status === "confirmado" || a.status === "em_espera") && (
+                             <div className="flex items-center justify-end gap-1">
+                               {!["concluido", "cancelado", "nao_compareceu"].includes(a.status) && (
+                                 <Button size="sm" variant="outline"
+                                   className="h-7 px-2 text-[10px] gap-1 border-primary/30 text-primary hover:bg-primary/5"
+                                   title="Chamar paciente"
+                                   onClick={() => callPatient(a)}>
+                                   <Megaphone className="h-3 w-3" />
+                                   Chamar
+                                   {call && <span className="ml-0.5 rounded-full bg-primary/10 px-1 text-[9px] font-semibold">{call.count}x</span>}
+                                 </Button>
+                               )}
+                               {(a.status === "chegou" || a.status === "confirmado" || a.status === "em_espera") && (
                                 <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] gap-1 border-amber-200 text-amber-700 hover:bg-amber-50"
                                   onClick={() => quickAction(a.id, "em_andamento")}>
                                   <PlayCircle className="h-3 w-3" />Atender
