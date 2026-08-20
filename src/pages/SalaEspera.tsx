@@ -28,6 +28,8 @@ import { format, differenceInMinutes, differenceInSeconds } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { formatAgendaTime, parseAgendaDateTime } from "@/lib/agendaDateTime";
+import { CallSourceChip, useCallSource } from "@/components/salas/CallSourceDialog";
+
 
 /* HOMOLOGAÇÃO: todos os status refletem na sala de espera */
 const WAITING_ROOM_STATUSES = [
