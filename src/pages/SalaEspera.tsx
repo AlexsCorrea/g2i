@@ -191,7 +191,9 @@ export default function SalaEspera() {
 
   const callPatient = (a: Appointment) => {
     const name = patientName(a);
-    const local = (a as any).room || a.location || "recepção";
+    const local = callSource.enabled && callSource.attendantPanel
+      ? callSource.attendantPanel
+      : ((a as any).room || a.location || "recepção");
     const next = (calls[a.id]?.count || 0) + 1;
     setCalls(prev => ({ ...prev, [a.id]: { count: next, at: Date.now() } }));
 
@@ -208,15 +210,20 @@ export default function SalaEspera() {
       updateAppointment.mutate({ id: a.id, status: "em_espera" as any });
     }
 
+    const destino = callSource.enabled
+      ? `Local: ${local} · ${callSource.panelIds.length} painel(is)`
+      : `Local: ${local}`;
+
     if (next >= MAX_CALLS) {
       toast.warning(`${name} — ${next}ª chamada`, {
         description: "Sem comparecimento após 3 chamadas. Deseja marcar como ausente?",
         action: { label: "Marcar ausente", onClick: () => setAbsentTarget(a) },
       });
     } else {
-      toast.success(`Chamando ${name} (${next}/${MAX_CALLS})`, { description: `Local: ${local}` });
+      toast.success(`Chamando ${name} (${next}/${MAX_CALLS})`, { description: destino });
     }
   };
+
 
   /* ---------- Ausência ---------- */
   const [absentTarget, setAbsentTarget] = useState<Appointment | null>(null);
