@@ -180,8 +180,10 @@ export default function SalaEspera() {
   }), [dayList]);
 
   /* ---------- Ações ---------- */
+  const { source: callSource, save: saveCallSource } = useCallSource();
+
   const quickAction = async (id: string, status: string) => {
-    await updateAppointment.mutateAsync({ id, status: status as any });
+
   };
 
   const getProcedures = (a: Appointment): string[] => {
