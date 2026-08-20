@@ -310,6 +310,8 @@ export default function SalaEspera() {
           </div>
 
           <div className="flex items-center gap-2">
+            <CallSourceChip source={callSource} onSave={saveCallSource} />
+
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
