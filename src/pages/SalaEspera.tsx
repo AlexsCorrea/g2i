@@ -183,8 +183,9 @@ export default function SalaEspera() {
   const { source: callSource, save: saveCallSource } = useCallSource();
 
   const quickAction = async (id: string, status: string) => {
-
+    await updateAppointment.mutateAsync({ id, status: status as any });
   };
+
 
   const getProcedures = (a: Appointment): string[] => {
     const raw = [(a as any).description, (a as any).notes].filter(Boolean).join("\n");
